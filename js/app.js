@@ -258,8 +258,7 @@ function resetAll() {
   });
   $("unlock-single-btn").hidden = false;
   $("unlock-panel-btn").hidden = false;
-  $("stage2-running").hidden = true;
-  $("stage2-error").hidden = true;
+  hideGeneratingLoader();
   document.querySelectorAll(".locked-row, .agent-cta").forEach((el) => {
     el.hidden = false;
   });
@@ -447,11 +446,13 @@ function startJobPolling() {
           loadFullReport();
         }
         if (s2 === "error") {
-          $("stage2-running").hidden = true;
-          const errEl = $("stage2-error");
-          errEl.textContent =
-            "Deep analysis could not be completed. Refresh to retry, or contact support.";
-          errEl.hidden = false;
+          if (state.stopJobPoll) state.stopJobPoll();
+          showLoaderError(
+            "single",
+            data.stage2?.error
+              ? friendlyDeepError(data.stage2.error)
+              : "We couldn't finish generating your report.",
+          );
         }
       }
 
@@ -462,6 +463,9 @@ function startJobPolling() {
             state.panelStatus[k] === "complete" ||
             state.panelStatus[k] === "error",
         );
+        const allError = ["claude", "gpt", "gemini"].every(
+          (k) => state.panelStatus[k] === "error",
+        );
         if (
           state.panelStatus.claude === "complete" ||
           state.panelStatus.gpt === "complete" ||
@@ -469,7 +473,14 @@ function startJobPolling() {
         ) {
           loadPanelReport();
         }
-        if (allDone && state.stopJobPoll) {
+        if (allError) {
+          // Every model failed — show the big error state.
+          if (state.stopJobPoll) state.stopJobPoll();
+          showLoaderError(
+            "panel",
+            "All three reviews failed to generate. Try again, or pay for a single report instead.",
+          );
+        } else if (allDone && state.stopJobPoll) {
           state.stopJobPoll();
         }
       }
@@ -485,9 +496,13 @@ function startJobPolling() {
         showError(err.message || "Polling failed. Please try again.");
         return;
       }
-      const errEl = $("stage2-error");
-      errEl.textContent = err.message || "Polling failed.";
-      errEl.hidden = false;
+      // Mid-paid polling failure — surface in the loader if it's already showing.
+      if (state.paid) {
+        showLoaderError(
+          state.paidTier || "single",
+          err.message || "We lost connection while generating your report.",
+        );
+      }
     },
   );
 }
@@ -495,17 +510,19 @@ function startJobPolling() {
 function updatePanelTabStates() {
   ["claude", "gpt", "gemini"].forEach((k) => {
     const stateEl = document.querySelector(`[data-tab-state="${k}"]`);
-    if (!stateEl) return;
-    const status = state.panelStatus[k];
-    stateEl.className = `panel-tab-state ${status}`;
-    stateEl.textContent =
-      status === "complete"
-        ? "Done"
-        : status === "running"
-          ? "Reviewing…"
-          : status === "error"
-            ? "Failed"
-            : "Queued";
+    if (stateEl) {
+      const status = state.panelStatus[k];
+      stateEl.className = `panel-tab-state ${status}`;
+      stateEl.textContent =
+        status === "complete"
+          ? "Done"
+          : status === "running"
+            ? "Reviewing…"
+            : status === "error"
+              ? "Failed"
+              : "Queued";
+    }
+    setPanelLoaderStatus(k, state.panelStatus[k]);
   });
 }
 
@@ -695,16 +712,15 @@ function onPaid(data) {
   triggerFanOut(state.paidTier, state.jobId);
 
   if (state.paidTier === "panel") {
-    $("panel-report").hidden = false;
+    $("panel-report").hidden = true; // hide until results land
+    showGeneratingLoader("panel");
     updatePanelTabStates();
     if (!state.stopJobPoll) startJobPolling();
   } else {
     if (state.stage2Status === "complete") {
       loadFullReport();
     } else {
-      $("stage2-running").hidden = false;
-      $("stage2-running").textContent =
-        "Payment confirmed. Full report is still being generated…";
+      showGeneratingLoader("single");
       if (!state.stopJobPoll) startJobPolling();
     }
   }
@@ -747,6 +763,7 @@ async function loadPanelReport() {
     const data = await res.json();
     if (!data.panel) return;
 
+    let anyResultReady = false;
     ["claude", "gpt", "gemini"].forEach((k) => {
       const result = data.panel[k]?.result;
       const status = data.panel[k]?.status;
@@ -755,6 +772,7 @@ async function loadPanelReport() {
         state.panelResults[k] = result;
         renderPanelPane(k, result);
       }
+      if (state.panelResults[k]) anyResultReady = true;
       const pdfReady = !!data.panel[k]?.pdf_available;
       const dl = document.querySelector(`.panel-download[data-download="${k}"]`);
       if (dl) {
@@ -772,12 +790,21 @@ async function loadPanelReport() {
     });
     updatePanelTabStates();
 
+    // Once the first model produces a result, hide the big loader and reveal
+    // the panel report. Slower models keep their own per-pane "drafting" text.
+    if (anyResultReady) {
+      hideGeneratingLoader();
+      $("panel-report").hidden = false;
+    }
+
     const allDone = ["claude", "gpt", "gemini"].every(
       (k) =>
         state.panelStatus[k] === "complete" ||
         state.panelStatus[k] === "error",
     );
     if (allDone) {
+      hideGeneratingLoader();
+      $("panel-report").hidden = false;
       setupPanelRecoveryUrl();
       if (state.stopJobPoll) state.stopJobPoll();
     }
@@ -867,13 +894,11 @@ async function loadFullReport() {
       $("download-pdf").href =
         `/api/report?id=${encodeURIComponent(state.jobId)}&token=${encodeURIComponent(state.downloadToken)}&format=pdf`;
       setupRecoveryUrl();
-      $("stage2-running").hidden = true;
+      hideGeneratingLoader();
     }
   } catch (err) {
     console.error("loadFullReport:", err);
-    const errEl = $("stage2-error");
-    errEl.textContent = `Failed to load full report: ${err.message}`;
-    errEl.hidden = false;
+    showLoaderError("single", `Failed to load full report: ${err.message}`);
   }
 }
 
@@ -969,12 +994,12 @@ async function checkRecoveryUrl() {
     }
 
     if (state.paidTier === "panel" && data.panel) {
-      $("panel-report").hidden = false;
       const anyPanelPending = ["claude", "gpt", "gemini"].some(
         (k) => (data.panel[k]?.status || "pending") === "pending",
       );
       if (anyPanelPending) triggerFanOut("panel", job);
 
+      let anyResult = false;
       ["claude", "gpt", "gemini"].forEach((k) => {
         const result = data.panel[k]?.result;
         const status = data.panel[k]?.status;
@@ -982,6 +1007,7 @@ async function checkRecoveryUrl() {
         if (result) {
           state.panelResults[k] = result;
           renderPanelPane(k, result);
+          anyResult = true;
         }
         const pdfReady = !!data.panel[k]?.pdf_available;
         const dl = document.querySelector(`.panel-download[data-download="${k}"]`);
@@ -993,6 +1019,13 @@ async function checkRecoveryUrl() {
           dl.hidden = false;
         }
       });
+
+      // Show the loader if no results yet; otherwise show the panel report.
+      if (anyResult) {
+        $("panel-report").hidden = false;
+      } else {
+        showGeneratingLoader("panel");
+      }
       updatePanelTabStates();
       if (!anyPanelPending) {
         setupPanelRecoveryUrl();
@@ -1010,6 +1043,7 @@ async function checkRecoveryUrl() {
         setupRecoveryUrl();
       } else if ((data.stage2?.status || "pending") === "pending") {
         // Recovery URL hit but stage2 hasn't run yet — trigger and poll.
+        showGeneratingLoader("single");
         triggerFanOut("single", job);
         if (!state.stopJobPoll) startJobPolling();
       }
@@ -1037,4 +1071,232 @@ function escapeHtml(s) {
 }
 function escapeAttr(s) {
   return escapeHtml(s).replace(/\s+/g, "-");
+}
+
+// generating-loader controller
+const REX_POSES = [
+  "/assets/rex.png",
+  "/assets/rex-concern.png",
+  "/assets/rex-cheer.png",
+];
+const SINGLE_LOADER_MESSAGES = [
+  "Reading every paragraph carefully…",
+  "Cross-checking against the standard form…",
+  "Looking for red flags…",
+  "Doing the sales-price math…",
+  "Decoding any legal jargon…",
+  "Drafting your summary…",
+  "Polishing the report…",
+  "Almost there…",
+];
+const PANEL_LOADER_MESSAGES = [
+  "Three frontier AIs are reading your contract…",
+  "Each model is drafting its review independently…",
+  "Watching where they agree and disagree…",
+  "Nothing makes a contract clearer than three opinions on it.",
+  "Polishing the panel report…",
+  "Almost there…",
+];
+const loaderTimers = { msg: null, hero: null, trio: null };
+
+function showGeneratingLoader(tier) {
+  const loader = document.getElementById("generating-loader");
+  if (!loader) return;
+  const card = loader.querySelector(".generating-card");
+  const single = loader.querySelector('.rex-stage[data-mode="single"]');
+  const panel = loader.querySelector('.rex-stage[data-mode="panel"]');
+  const headline = document.getElementById("generating-headline");
+  const meta = document.getElementById("generating-meta");
+  const actions = document.getElementById("generating-actions");
+
+  // Reset error styling on each show.
+  if (card) card.classList.remove("is-error");
+  if (actions) actions.hidden = true;
+  if (meta) {
+    meta.textContent = "This usually takes 20–60 seconds. Don't close this tab.";
+    meta.hidden = false;
+  }
+
+  if (tier === "panel") {
+    if (single) single.hidden = true;
+    if (panel) panel.hidden = false;
+    if (headline) headline.textContent = "Generating your panel review…";
+    resetTrioCards();
+    startTrioPoseCycle();
+  } else {
+    if (single) single.hidden = false;
+    if (panel) panel.hidden = true;
+    if (headline) headline.textContent = "Generating your full report…";
+    const hero = document.getElementById("rex-hero");
+    if (hero) hero.src = "/assets/rex.png";
+    startHeroPoseCycle();
+  }
+  loader.hidden = false;
+  startMessageCycle(tier);
+}
+
+function showLoaderError(tier, message) {
+  const loader = document.getElementById("generating-loader");
+  if (!loader) return;
+  const card = loader.querySelector(".generating-card");
+  const single = loader.querySelector('.rex-stage[data-mode="single"]');
+  const panel = loader.querySelector('.rex-stage[data-mode="panel"]');
+  const headline = document.getElementById("generating-headline");
+  const status = document.getElementById("generating-status");
+  const meta = document.getElementById("generating-meta");
+  const actions = document.getElementById("generating-actions");
+
+  // Stop the cycle timers — we're freezing on the error state.
+  if (loaderTimers.msg) clearInterval(loaderTimers.msg);
+  if (loaderTimers.hero) clearInterval(loaderTimers.hero);
+  if (loaderTimers.trio) clearInterval(loaderTimers.trio);
+  loaderTimers.msg = loaderTimers.hero = loaderTimers.trio = null;
+
+  if (card) card.classList.add("is-error");
+  if (headline) headline.textContent = "Something went wrong";
+  if (status) {
+    status.classList.remove("swapping");
+    status.textContent = message || "We couldn't finish generating your report.";
+  }
+  if (meta) {
+    meta.textContent =
+      "Refreshing usually fixes it. If this keeps happening, contact support and include the job ID from the URL.";
+  }
+  if (actions) actions.hidden = false;
+
+  if (tier === "panel") {
+    if (single) single.hidden = true;
+    if (panel) panel.hidden = false;
+    // Switch all non-done trio rexes to concerned pose.
+    document.querySelectorAll(".rex-trio-img").forEach((img) => {
+      const card = img.closest(".rex-trio-card");
+      if (card && !card.classList.contains("is-done")) {
+        img.src = "/assets/rex-concern.png";
+      }
+    });
+  } else {
+    if (single) single.hidden = false;
+    if (panel) panel.hidden = true;
+    const hero = document.getElementById("rex-hero");
+    if (hero) {
+      hero.src = "/assets/rex-concern.png";
+      hero.classList.remove("swapping");
+    }
+  }
+
+  loader.hidden = false;
+
+  // Wire the retry button to a full reload (preserves recovery URL params).
+  const retryBtn = document.getElementById("generating-retry");
+  if (retryBtn) {
+    retryBtn.onclick = () => window.location.reload();
+  }
+}
+
+function hideGeneratingLoader() {
+  const loader = document.getElementById("generating-loader");
+  if (loader) loader.hidden = true;
+  if (loaderTimers.msg) clearInterval(loaderTimers.msg);
+  if (loaderTimers.hero) clearInterval(loaderTimers.hero);
+  if (loaderTimers.trio) clearInterval(loaderTimers.trio);
+  loaderTimers.msg = loaderTimers.hero = loaderTimers.trio = null;
+}
+
+function startMessageCycle(tier) {
+  const messages = tier === "panel" ? PANEL_LOADER_MESSAGES : SINGLE_LOADER_MESSAGES;
+  const statusEl = document.getElementById("generating-status");
+  if (!statusEl) return;
+  let idx = 0;
+  statusEl.textContent = messages[0];
+  statusEl.classList.remove("swapping");
+  if (loaderTimers.msg) clearInterval(loaderTimers.msg);
+  loaderTimers.msg = setInterval(() => {
+    idx = (idx + 1) % messages.length;
+    statusEl.classList.add("swapping");
+    setTimeout(() => {
+      statusEl.textContent = messages[idx];
+      statusEl.classList.remove("swapping");
+    }, 350);
+  }, 4200);
+}
+
+function startHeroPoseCycle() {
+  const hero = document.getElementById("rex-hero");
+  if (!hero) return;
+  let idx = 0;
+  if (loaderTimers.hero) clearInterval(loaderTimers.hero);
+  loaderTimers.hero = setInterval(() => {
+    idx = (idx + 1) % REX_POSES.length;
+    hero.classList.add("swapping");
+    setTimeout(() => {
+      hero.src = REX_POSES[idx];
+      hero.classList.remove("swapping");
+    }, 350);
+  }, 3500);
+}
+
+function startTrioPoseCycle() {
+  const imgs = document.querySelectorAll(".rex-trio-img");
+  if (!imgs.length) return;
+  let tick = 0;
+  if (loaderTimers.trio) clearInterval(loaderTimers.trio);
+  loaderTimers.trio = setInterval(() => {
+    imgs.forEach((img, i) => {
+      const card = img.closest(".rex-trio-card");
+      if (card && card.classList.contains("is-done")) return;
+      const pose = REX_POSES[(tick + i) % REX_POSES.length];
+      img.classList.add("swapping");
+      setTimeout(() => {
+        img.src = pose;
+        img.classList.remove("swapping");
+      }, 350);
+    });
+    tick++;
+  }, 2800);
+}
+
+function resetTrioCards() {
+  ["claude", "gpt", "gemini"].forEach((k) => {
+    const card = document.querySelector(`.rex-trio-card[data-model="${k}"]`);
+    if (card) card.classList.remove("is-done");
+    const stateEl = document.querySelector(`[data-trio-state="${k}"]`);
+    if (stateEl) stateEl.textContent = "Reading…";
+  });
+}
+
+function friendlyDeepError(rawError) {
+  const e = String(rawError || "").toLowerCase();
+  if (e.includes("expected") && e.includes("json")) {
+    return "The model returned an unparseable response. This usually means it ran long and got cut off — refreshing usually fixes it.";
+  }
+  if (e.includes("timeout") || e.includes("timed out")) {
+    return "The analysis took too long and timed out. Refresh to retry — large contracts sometimes need a second pass.";
+  }
+  if (e.includes("rate") && e.includes("limit")) {
+    return "The AI provider is rate-limiting us right now. Wait a minute and refresh.";
+  }
+  if (e.includes("api key") || e.includes("authentication")) {
+    return "We had a credentials problem on our end. Contact support and include the job ID from the URL.";
+  }
+  return "Something went wrong while generating your report. Refreshing usually fixes it.";
+}
+
+function setPanelLoaderStatus(model, status) {
+  const card = document.querySelector(`.rex-trio-card[data-model="${model}"]`);
+  if (!card) return;
+  const stateEl = card.querySelector(`[data-trio-state="${model}"]`);
+  const img = card.querySelector(`[data-trio-img="${model}"]`);
+  if (!stateEl) return;
+  if (status === "running") {
+    stateEl.textContent = "Reviewing…";
+  } else if (status === "complete") {
+    stateEl.textContent = "Done";
+    card.classList.add("is-done");
+    if (img) img.src = "/assets/rex-cheer.png";
+  } else if (status === "error") {
+    stateEl.textContent = "Failed";
+    card.classList.remove("is-done");
+  } else {
+    stateEl.textContent = "Queued";
+  }
 }
