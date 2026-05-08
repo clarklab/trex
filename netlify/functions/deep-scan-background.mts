@@ -4,8 +4,8 @@ import { getStore } from "@netlify/blobs";
 import { db } from "../../db/index.js";
 import { jobs } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
-import { extractPdfText } from "../lib/pdf.js";
-import { buildDeepPrompt, parseDeepResult } from "../lib/deep-prompt.js";
+import { loadPdfBase64 } from "../lib/pdf-blob.js";
+import { buildDeepPromptForAttachment, parseDeepResult } from "../lib/deep-prompt.js";
 import { generateReportPdf } from "../lib/report-pdf.js";
 
 export default async (req: Request, _context: Context) => {
@@ -37,15 +37,33 @@ export default async (req: Request, _context: Context) => {
       .set({ stage2Status: "running", updatedAt: new Date() })
       .where(eq(jobs.id, jobId));
 
-    const text = await extractPdfText(jobId, job.blobKey);
     const formId = (job.stage1Result as { form_id?: string } | null)?.form_id ?? null;
-    const prompt = buildDeepPrompt(text, formId);
+    const { base64, byteLength } = await loadPdfBase64(job.blobKey);
+    const prompt = buildDeepPromptForAttachment(formId);
+    console.log(
+      `deep-scan ${jobId}: loaded PDF (${byteLength} bytes), calling Sonnet with document attachment`,
+    );
 
     const anthropic = new Anthropic({ timeout: 600_000 });
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 8192,
-      messages: [{ role: "user", content: prompt }],
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "document",
+              source: {
+                type: "base64",
+                media_type: "application/pdf",
+                data: base64,
+              },
+            },
+            { type: "text", text: prompt },
+          ],
+        },
+      ],
     });
 
     const firstBlock = message.content[0];

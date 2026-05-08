@@ -3,8 +3,8 @@ import { GoogleGenAI } from "@google/genai";
 import { db } from "../../db/index.js";
 import { jobs } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
-import { extractPdfText } from "../lib/pdf.js";
-import { buildDeepPrompt, parseDeepResult } from "../lib/deep-prompt.js";
+import { loadPdfBase64 } from "../lib/pdf-blob.js";
+import { buildDeepPromptForAttachment, parseDeepResult } from "../lib/deep-prompt.js";
 
 const MODEL = "gemini-2.5-pro";
 
@@ -30,14 +30,22 @@ export default async (req: Request, _context: Context) => {
       .set({ panelGeminiStatus: "running", updatedAt: new Date() })
       .where(eq(jobs.id, jobId));
 
-    const text = await extractPdfText(jobId, job.blobKey);
     const formId = (job.stage1Result as { form_id?: string } | null)?.form_id ?? null;
-    const prompt = buildDeepPrompt(text, formId);
+    const { base64 } = await loadPdfBase64(job.blobKey);
+    const prompt = buildDeepPromptForAttachment(formId);
 
     const genAI = new GoogleGenAI({});
     const response = await genAI.models.generateContent({
       model: MODEL,
-      contents: prompt,
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { inlineData: { mimeType: "application/pdf", data: base64 } },
+            { text: prompt },
+          ],
+        },
+      ],
       config: {
         responseMimeType: "application/json",
       },

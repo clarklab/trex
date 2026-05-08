@@ -50,6 +50,27 @@ Compare the contract against your understanding of the corresponding standard TR
 
 For each modification, classify the risk and explain in plain English. Identify the form, summarize the contract, and extract every material term.`;
 
+/**
+ * Builds the instruction text for a deep scan when the executed
+ * contract is being attached to the request as a PDF document
+ * (Anthropic content type "document"). The reference form is still
+ * embedded as text since it's static per form.
+ */
+export function buildDeepPromptForAttachment(formId?: string | null): string {
+  const entry = getFormEntry(formId);
+  const reviewPrompt = entry?.prompt || FALLBACK_PROMPT;
+  const referenceBlock = entry?.referenceText
+    ? `## REFERENCE FORM (blank ${entry.formId})\n\n${entry.referenceText}\n\n---\n\n`
+    : "";
+
+  return `${reviewPrompt}\n\n${referenceBlock}## EXECUTED CONTRACT\n\nThe executed contract is attached as a PDF document above. Read it directly — including any handwritten or typed entries, signatures, and stamps. Compare its printed-form paragraphs to the REFERENCE FORM text shown above.\n\n---\n${JSON_OUTPUT_INSTRUCTION}`;
+}
+
+/**
+ * Legacy text-based prompt builder kept for backwards-compatibility.
+ * Prefer buildDeepPromptForAttachment + a PDF document content block —
+ * pdf-parse strips out scanned pages and produces empty input.
+ */
 export function buildDeepPrompt(pdfText: string, formId?: string | null): string {
   const entry = getFormEntry(formId);
   const reviewPrompt = entry?.prompt || FALLBACK_PROMPT;

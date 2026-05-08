@@ -3,8 +3,8 @@ import OpenAI from "openai";
 import { db } from "../../db/index.js";
 import { jobs } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
-import { extractPdfText } from "../lib/pdf.js";
-import { buildDeepPrompt, parseDeepResult } from "../lib/deep-prompt.js";
+import { loadPdfBase64 } from "../lib/pdf-blob.js";
+import { buildDeepPromptForAttachment, parseDeepResult } from "../lib/deep-prompt.js";
 
 const MODEL = "gpt-5.5-pro";
 
@@ -30,20 +30,31 @@ export default async (req: Request, _context: Context) => {
       .set({ panelGptStatus: "running", updatedAt: new Date() })
       .where(eq(jobs.id, jobId));
 
-    const text = await extractPdfText(jobId, job.blobKey);
     const formId = (job.stage1Result as { form_id?: string } | null)?.form_id ?? null;
-    const prompt = buildDeepPrompt(text, formId);
+    const { base64 } = await loadPdfBase64(job.blobKey);
+    const prompt = buildDeepPromptForAttachment(formId);
 
     const openai = new OpenAI({ timeout: 600_000 });
-    const completion = await openai.chat.completions.create({
+    const response = await openai.responses.create({
       model: MODEL,
-      messages: [{ role: "user", content: prompt }],
-      response_format: { type: "json_object" },
+      input: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "input_file",
+              filename: "contract.pdf",
+              file_data: `data:application/pdf;base64,${base64}`,
+            },
+            { type: "input_text", text: prompt },
+          ],
+        },
+      ],
     });
 
-    const content = completion.choices?.[0]?.message?.content;
-    if (!content) throw new Error("OpenAI response had no content");
-    const result = parseDeepResult(content);
+    const text = response.output_text;
+    if (!text) throw new Error("OpenAI response had no output_text");
+    const result = parseDeepResult(text);
 
     await db
       .update(jobs)

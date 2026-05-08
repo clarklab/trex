@@ -10,7 +10,7 @@
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.32.1",
+    "@anthropic-ai/sdk": "^0.95.1",
     "@google/genai": "^2.0.0",
     "@netlify/blobs": "^8.1.0",
     "@netlify/database": "^1.0.0",
