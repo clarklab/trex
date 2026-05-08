@@ -1,5 +1,5 @@
 import type { Config, Context } from "@netlify/functions";
-import Stripe from "stripe";
+import { validateEvent, WebhookVerificationError } from "@polar-sh/sdk/webhooks";
 import { db } from "../../db/index.js";
 import { checkoutSessions } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
@@ -10,34 +10,36 @@ export default async (req: Request, context: Context) => {
     return new Response("Method not allowed", { status: 405 });
   }
 
-  const stripeKey = Netlify.env.get("STRIPE_SECRET_KEY");
-  const webhookSecret = Netlify.env.get("STRIPE_WEBHOOK_SECRET");
-  if (!stripeKey || !webhookSecret) {
-    return new Response("Stripe not configured", { status: 500 });
-  }
-
-  const sig = req.headers.get("stripe-signature");
-  if (!sig) {
-    return new Response("Missing signature", { status: 400 });
+  const webhookSecret = Netlify.env.get("POLAR_WEBHOOK_SECRET");
+  if (!webhookSecret) {
+    return new Response("Polar webhook not configured", { status: 500 });
   }
 
   const rawBody = await req.text();
-  const stripe = new Stripe(stripeKey);
+  const headers: Record<string, string> = {};
+  req.headers.forEach((value, key) => { headers[key] = value; });
 
-  let event: Stripe.Event;
+  let event: { type: string; data: unknown };
   try {
-    event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
+    event = validateEvent(rawBody, headers, webhookSecret) as typeof event;
   } catch (err) {
+    if (err instanceof WebhookVerificationError) {
+      return new Response("Invalid signature", { status: 403 });
+    }
     const msg = err instanceof Error ? err.message : String(err);
-    console.error("Stripe signature verify failed:", msg);
-    return new Response(`Webhook signature failed: ${msg}`, { status: 400 });
+    console.error("Polar webhook verify failed:", msg);
+    return new Response(`Webhook verify failed: ${msg}`, { status: 400 });
   }
 
-  if (event.type === "payment_intent.succeeded") {
-    const intent = event.data.object;
-    const sessionId = intent.metadata?.session_id;
+  if (event.type === "order.paid") {
+    const order = event.data as {
+      metadata?: Record<string, string>;
+      checkout_id?: string;
+      checkoutId?: string;
+    };
+    const sessionId = order.metadata?.session_id;
     if (!sessionId) {
-      console.warn("payment_intent.succeeded without session_id metadata");
+      console.warn("order.paid without session_id metadata");
       return new Response("ok");
     }
 
@@ -47,7 +49,7 @@ export default async (req: Request, context: Context) => {
       .where(eq(checkoutSessions.id, sessionId));
 
     if (!session) {
-      console.warn(`Webhook for unknown session ${sessionId}`);
+      console.warn(`Polar webhook for unknown session ${sessionId}`);
       return new Response("ok");
     }
 
@@ -56,7 +58,7 @@ export default async (req: Request, context: Context) => {
         .update(checkoutSessions)
         .set({
           status: "paid",
-          method: "card",
+          method: "polar",
           paidAt: new Date(),
         })
         .where(eq(checkoutSessions.id, sessionId));
@@ -72,5 +74,5 @@ export default async (req: Request, context: Context) => {
 };
 
 export const config: Config = {
-  path: "/api/stripe-webhook",
+  path: "/api/polar-webhook",
 };

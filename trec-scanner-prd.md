@@ -78,7 +78,7 @@ The current published TREC forms. Pull the latest versions at build time and re-
 
 ## Tech
 
-Built on Netlify. AI via Netlify AI Gateway. Persistence via Netlify DB / Blobs as needed. Payment via Stripe Payment Element (inline, same pattern we already use). Agent picks the rest.
+Built on Netlify. AI via Netlify AI Gateway. Persistence via Netlify DB / Blobs as needed. Payment via Polar embedded checkout (Polar is merchant of record). Agent picks the rest.
 
 ## Out of scope for v1
 

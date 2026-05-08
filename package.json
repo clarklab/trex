@@ -15,12 +15,12 @@
     "@netlify/blobs": "^8.1.0",
     "@netlify/database": "^1.0.0",
     "@netlify/functions": "^3.0.0",
+    "@polar-sh/sdk": "^0.47.1",
     "drizzle-orm": "beta",
     "openai": "^4.104.0",
     "pdf-parse": "^1.1.1",
     "pdfkit": "^0.15.0",
-    "qrcode": "^1.5.4",
-    "stripe": "^17.0.0"
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

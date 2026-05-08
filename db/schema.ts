@@ -42,7 +42,7 @@ export const checkoutSessions = pgTable("checkout_sessions", {
   status: text("status").notNull().default("pending"),
   method: text("method"),
 
-  stripeIntentId: text("stripe_intent_id"),
+  polarCheckoutId: text("polar_checkout_id"),
   lnPaymentHash: text("ln_payment_hash"),
   lnVerifyUrl: text("ln_verify_url"),
 

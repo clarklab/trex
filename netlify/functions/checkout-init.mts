@@ -1,5 +1,5 @@
 import type { Config, Context } from "@netlify/functions";
-import Stripe from "stripe";
+import { Polar } from "@polar-sh/sdk";
 import { db } from "../../db/index.js";
 import { jobs, checkoutSessions } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
@@ -15,14 +15,25 @@ function isTier(t: unknown): t is Tier {
   return t === "single" || t === "panel";
 }
 
+function polarServerEnv(): "sandbox" | "production" {
+  const v = Netlify.env.get("POLAR_SERVER");
+  return v === "production" ? "production" : "sandbox";
+}
+
+function productIdForTier(tier: Tier): string | null {
+  return tier === "panel"
+    ? Netlify.env.get("POLAR_PRODUCT_PANEL") ?? null
+    : Netlify.env.get("POLAR_PRODUCT_SINGLE") ?? null;
+}
+
 export default async (req: Request, _context: Context) => {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
   }
 
-  const stripeKey = Netlify.env.get("STRIPE_SECRET_KEY");
-  if (!stripeKey) {
-    return Response.json({ error: "Stripe not configured" }, { status: 500 });
+  const polarToken = Netlify.env.get("POLAR_ACCESS_TOKEN");
+  if (!polarToken) {
+    return Response.json({ error: "Polar not configured" }, { status: 500 });
   }
   const lnAddress = Netlify.env.get("ALBY_LN_ADDRESS");
 
@@ -40,14 +51,24 @@ export default async (req: Request, _context: Context) => {
 
   const tier: Tier = isTier(body.tier) ? body.tier : "single";
   const priceUsd = TIER_PRICES[tier];
-  const priceCents = priceUsd * 100;
+
+  const productId = productIdForTier(tier);
+  if (!productId) {
+    return Response.json(
+      { error: `Polar product id missing for tier ${tier}` },
+      { status: 500 },
+    );
+  }
 
   const [job] = await db.select().from(jobs).where(eq(jobs.id, jobId));
   if (!job) {
     return Response.json({ error: "Job not found" }, { status: 404 });
   }
 
-  const stripe = new Stripe(stripeKey);
+  const polar = new Polar({
+    accessToken: polarToken,
+    server: polarServerEnv(),
+  });
 
   const [session] = await db
     .insert(checkoutSessions)
@@ -58,12 +79,23 @@ export default async (req: Request, _context: Context) => {
     })
     .returning();
 
-  const intent = await stripe.paymentIntents.create({
-    amount: priceCents,
-    currency: "usd",
+  const origin = (() => {
+    try { return new URL(req.url).origin; } catch { return ""; }
+  })();
+  const successUrl = origin
+    ? `${origin}/?paid=1&session_id=${session.id}`
+    : undefined;
+
+  const polarCheckout = await polar.checkouts.create({
+    products: [productId],
+    successUrl,
     metadata: { session_id: session.id, job_id: jobId, tier },
-    automatic_payment_methods: { enabled: true },
   });
+
+  await db
+    .update(checkoutSessions)
+    .set({ polarCheckoutId: polarCheckout.id })
+    .where(eq(checkoutSessions.id, session.id));
 
   let lnInvoice: string | null = null;
   let lnAmountSats: number | null = null;
@@ -83,21 +115,19 @@ export default async (req: Request, _context: Context) => {
     }
   }
 
-  await db
-    .update(checkoutSessions)
-    .set({
-      stripeIntentId: intent.id,
-      lnPaymentHash,
-      lnVerifyUrl,
-    })
-    .where(eq(checkoutSessions.id, session.id));
+  if (lnPaymentHash || lnVerifyUrl) {
+    await db
+      .update(checkoutSessions)
+      .set({ lnPaymentHash, lnVerifyUrl })
+      .where(eq(checkoutSessions.id, session.id));
+  }
 
   return Response.json({
     session_id: session.id,
     tier,
     price_usd: priceUsd,
-    stripe_client_secret: intent.client_secret,
-    stripe_publishable_key: Netlify.env.get("STRIPE_PUBLISHABLE_KEY") ?? null,
+    polar_checkout_id: polarCheckout.id,
+    polar_checkout_url: polarCheckout.url,
     ln_invoice: lnInvoice,
     ln_amount_sats: lnAmountSats,
     ln_available: lnInvoice !== null,

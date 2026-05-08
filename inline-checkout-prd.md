@@ -1,6 +1,8 @@
-# Inline Stripe + BTC Checkout: Minimal PRD
+# Inline Polar + BTC Checkout: Minimal PRD
 
-A thin, two-rail paywall for a $3 PDF unlock. Card payments stay inline (Stripe Payment Element). Lightning shows an invoice QR. No redirects. No third-party SaaS subscription. No user accounts.
+> **Implementation note (post-swap):** the card rail is now Polar (merchant of record) using `@polar-sh/checkout` embedded overlay rather than Stripe Payment Element. The rest of the architecture below is still accurate; treat any `Stripe`/`stripe-webhook`/`STRIPE_*` references in the historical sections as `Polar`/`polar-webhook`/`POLAR_*`.
+
+A thin, two-rail paywall for a $3 PDF unlock. Card payments use Polar's embedded overlay (Polar is merchant of record). Lightning shows an invoice QR. No third-party SaaS subscription. No user accounts.
 
 ## 1. Goal
 

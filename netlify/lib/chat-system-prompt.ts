@@ -59,7 +59,7 @@ If a user uploads a non-TREC document or a TREC form that isn't 20-18, the AI wi
 
 # Payment
 
-- Stripe for cards, Lightning Network for Bitcoin (LN is one-way / non-refundable by design)
+- Polar for cards (Polar is the merchant of record), Lightning Network for Bitcoin (LN is one-way / non-refundable by design)
 - Refunds: if AI fails after a card payment, email through /contact within 7 days
 - No subscriptions, no recurring billing, no accounts
 

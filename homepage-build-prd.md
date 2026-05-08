@@ -1,10 +1,12 @@
 # TREC Contract Scanner: Homepage Build PRD
 
+> **Implementation note (post-swap):** the card payment rail is now Polar (merchant of record) using `@polar-sh/checkout` embedded overlay rather than Stripe Payment Element. Map historical `Stripe`/`stripe-webhook`/`stripe_intent_id`/`STRIPE_*` references to `Polar`/`polar-webhook`/`polar_checkout_id`/`POLAR_*`. The rest of the architecture (LN side, fan-out, polling, signed download tokens, DB tables) is unchanged.
+
 This document is the complete specification for building the TREC Contract Scanner homepage. It covers every function, endpoint, database table, and frontend behavior the implementing agent needs to produce. It intentionally contains zero design or styling direction -- a separate agent will handle all visual design. Everything here must work.
 
 ## 1. What this page does
 
-A single-page app where a user drags a TREC contract PDF (up to 10 MB) onto a drop zone, gets a free AI-generated summary within ~30 seconds, and can pay $5 to unlock a full detailed report. Payment is accepted via Stripe (USD) or Lightning Network (Bitcoin). AI analysis happens in two stages: a fast model returns a quick preview, then a deep model produces the full report in the background.
+A single-page app where a user drags a TREC contract PDF (up to 10 MB) onto a drop zone, gets a free AI-generated summary within ~30 seconds, and can pay $5 to unlock a full detailed report. Payment is accepted via Polar (USD card, merchant of record) or Lightning Network (Bitcoin). AI analysis happens in two stages: a fast model returns a quick preview, then a deep model produces the full report in the background.
 
 ## 2. High-level architecture
 

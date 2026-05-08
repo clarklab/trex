@@ -44,7 +44,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/styles.css" />
-    <script src="https://js.stripe.com/v3/"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@polar-sh/checkout@0.2.0/dist/embed.global.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
   </head>
   <body>
@@ -837,8 +837,11 @@
       </div>
 
       <div id="card-pane" class="pane">
-        <div id="payment-element"></div>
-        <button id="pay-card" disabled>Pay $5</button>
+        <p class="card-blurb">
+          Secure checkout powered by Polar. Card details never touch our
+          servers.
+        </p>
+        <button id="pay-card">Pay $5 with card</button>
         <p id="card-error" hidden></p>
       </div>
 

@@ -1,11 +1,10 @@
-// Checkout flow: Stripe card + Lightning.
+// Checkout flow: Polar embedded checkout + Lightning.
 
 import { pollCheckoutStatus } from "/js/poll.js";
 
-let stripe = null;
-let elements = null;
 let session = null;
 let stopPolling = null;
+let polarHandle = null;
 
 export async function openCheckout(jobId, tier, onPaid, onError) {
   resetState();
@@ -29,65 +28,31 @@ export async function openCheckout(jobId, tier, onPaid, onError) {
 
   const titleEl = document.querySelector("#checkout-dialog h2");
   const subEl = document.querySelector("#checkout-dialog .dialog-sub");
+  const payBtn = document.getElementById("pay-card");
   if (tier === "panel") {
     if (titleEl) titleEl.textContent = "Unlock panel review";
     if (subEl) subEl.textContent = "$12.00 USD — three frontier AIs review your contract.";
-    const payBtn = document.getElementById("pay-card");
-    if (payBtn) payBtn.textContent = "Pay $12";
+    if (payBtn) payBtn.textContent = "Pay $12 with card";
   } else {
     if (titleEl) titleEl.textContent = "Unlock full report";
     if (subEl) subEl.textContent = "$5.00 USD — one-time, no account.";
-    const payBtn = document.getElementById("pay-card");
-    if (payBtn) payBtn.textContent = "Pay $5";
+    if (payBtn) payBtn.textContent = "Pay $5 with card";
   }
 
-  if (!session.stripe_publishable_key) {
-    onError(new Error("Stripe is not configured on the server"));
+  if (!session.polar_checkout_url) {
+    onError(new Error("Polar checkout is not configured on the server"));
     return;
   }
 
-  if (!stripe) {
-    stripe = window.Stripe(session.stripe_publishable_key);
+  if (payBtn) {
+    payBtn.disabled = false;
+    payBtn.onclick = () => openPolarOverlay(onPaid, onError);
   }
-
-  elements = stripe.elements({
-    clientSecret: session.stripe_client_secret,
-  });
-  const paymentEl = elements.create("payment");
-  paymentEl.mount("#payment-element");
-  paymentEl.on("ready", () => {
-    document.getElementById("pay-card").disabled = false;
-  });
 
   const lnTab = document.getElementById("ln-tab");
   if (session.ln_available) {
     lnTab.hidden = false;
   }
-
-  document.getElementById("pay-card").onclick = async () => {
-    const errEl = document.getElementById("card-error");
-    errEl.hidden = true;
-    document.getElementById("pay-card").disabled = true;
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: { return_url: window.location.href },
-      redirect: "if_required",
-    });
-    if (error) {
-      errEl.textContent = error.message || "Card payment failed";
-      errEl.hidden = false;
-      document.getElementById("pay-card").disabled = false;
-    } else {
-      stopPolling = pollCheckoutStatus(
-        session.session_id,
-        (data) => {
-          dialog.close();
-          onPaid(data);
-        },
-        onError,
-      );
-    }
-  };
 
   setupTabs();
 
@@ -98,11 +63,55 @@ export async function openCheckout(jobId, tier, onPaid, onError) {
   document.querySelectorAll("[data-close]").forEach((b) => {
     b.onclick = () => {
       if (stopPolling) stopPolling();
+      if (polarHandle && typeof polarHandle.close === "function") {
+        try { polarHandle.close(); } catch {}
+      }
       dialog.close();
     };
   });
 
   dialog.showModal();
+}
+
+async function openPolarOverlay(onPaid, onError) {
+  const errEl = document.getElementById("card-error");
+  if (errEl) errEl.hidden = true;
+
+  if (!window.PolarEmbedCheckout || typeof window.PolarEmbedCheckout.create !== "function") {
+    onError(new Error("Polar embed script not loaded"));
+    return;
+  }
+
+  try {
+    polarHandle = await window.PolarEmbedCheckout.create(
+      session.polar_checkout_url,
+      { theme: "dark" },
+    );
+  } catch (err) {
+    if (errEl) {
+      errEl.textContent = err && err.message ? err.message : "Failed to open checkout";
+      errEl.hidden = false;
+    }
+    return;
+  }
+
+  const onSuccess = () => {
+    if (stopPolling) stopPolling();
+    stopPolling = pollCheckoutStatus(
+      session.session_id,
+      (data) => {
+        try { polarHandle && polarHandle.close && polarHandle.close(); } catch {}
+        document.getElementById("checkout-dialog").close();
+        onPaid(data);
+      },
+      onError,
+    );
+  };
+
+  polarHandle.addEventListener("success", onSuccess);
+  polarHandle.addEventListener("close", () => {
+    polarHandle = null;
+  });
 }
 
 function setupTabs() {
@@ -167,8 +176,10 @@ function resetState() {
     stopPolling();
     stopPolling = null;
   }
+  if (polarHandle && typeof polarHandle.close === "function") {
+    try { polarHandle.close(); } catch {}
+  }
+  polarHandle = null;
   const errEl = document.getElementById("card-error");
   if (errEl) errEl.hidden = true;
-  const paymentEl = document.getElementById("payment-element");
-  if (paymentEl) paymentEl.innerHTML = "";
 }
