@@ -430,21 +430,29 @@ function renderFreePreview(s1) {
   const titleEl = $("results-doc-title");
   const subEl = $("results-doc-sub");
   if (titleEl) {
-    titleEl.textContent =
-      address ||
-      (file ? file.name : `${s1?.form_id || "TREC"} contract`);
+    if (address) {
+      titleEl.textContent = address;
+      titleEl.classList.remove("muted");
+    } else if (file?.name) {
+      titleEl.textContent = file.name;
+      titleEl.classList.remove("muted");
+    } else {
+      titleEl.textContent = "Property address not detected";
+      titleEl.classList.add("muted");
+    }
   }
   if (subEl) {
-    const formId = s1?.form_id || "TREC";
-    const formName = s1?.form_name || "Unknown form";
+    const formId = s1?.form_id;
+    const formName = s1?.form_name;
     const pages = s1?.page_count
       ? `${s1.page_count} page${s1.page_count === 1 ? "" : "s"}`
-      : "";
-    const parts = [
-      formId !== "unknown" ? `TREC ${formId}` : "Unidentified TREC form",
-      formName !== "Unknown form" ? formName : null,
-      pages || null,
-    ].filter(Boolean);
+      : null;
+    const parts = [];
+    if (formId && formId !== "unknown") parts.push(`TREC ${formId}`);
+    if (formName && formName !== "Unknown form") parts.push(formName);
+    if (pages) parts.push(pages);
+    if (parts.length === 0 && file?.name) parts.push(file.name);
+    if (parts.length === 0) parts.push("Form not identified");
     subEl.textContent = parts.join(" · ");
   }
 
@@ -499,27 +507,40 @@ function renderTermCell(label, term) {
   cell.appendChild(labelEl);
 
   const value = term?.value;
+  const note = term?.note;
+  const warning = term?.warning;
+  const isEmpty = !value || String(value).trim() === "";
+
   const valueEl = document.createElement("div");
-  if (value) {
+  if (!isEmpty) {
     valueEl.className = "term-value";
     valueEl.textContent = value;
   } else {
+    cell.classList.add("term-empty");
     valueEl.className = "term-value empty";
-    valueEl.textContent = "—";
+    // If the AI flagged the empty field with a warning, the warning IS
+    // the headline. Otherwise show a neutral 'not filled' caption.
+    valueEl.textContent = warning ? "Blank" : "Not filled";
   }
   cell.appendChild(valueEl);
 
-  if (term?.note) {
+  if (note) {
     const noteEl = document.createElement("div");
     noteEl.className = "term-note";
-    noteEl.textContent = term.note;
+    noteEl.textContent = note;
+    cell.appendChild(noteEl);
+  } else if (isEmpty && !warning) {
+    // Subtle hint that this isn't a critical issue, just unfilled.
+    const noteEl = document.createElement("div");
+    noteEl.className = "term-note";
+    noteEl.textContent = "Not detected in this scan";
     cell.appendChild(noteEl);
   }
 
-  if (term?.warning) {
+  if (warning) {
     const warnEl = document.createElement("div");
     warnEl.className = "term-warning";
-    warnEl.innerHTML = `<span class="ic" aria-hidden="true">!</span><span>${escapeHtml(term.warning)}</span>`;
+    warnEl.innerHTML = `<span class="ic" aria-hidden="true">!</span><span>${escapeHtml(warning)}</span>`;
     cell.appendChild(warnEl);
   }
 
