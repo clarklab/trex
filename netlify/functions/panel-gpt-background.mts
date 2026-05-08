@@ -1,12 +1,15 @@
 import type { Config, Context } from "@netlify/functions";
 import OpenAI from "openai";
+import { getStore } from "@netlify/blobs";
 import { db } from "../../db/index.js";
 import { jobs } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 import { loadPdfBase64 } from "../lib/pdf-blob.js";
 import { buildDeepPromptForAttachment, parseDeepResult } from "../lib/deep-prompt.js";
+import { generateReportPdf } from "../lib/report-pdf.js";
 
 const MODEL = "gpt-5.5-pro";
+const MODEL_LABEL = "GPT-5.5 Pro";
 
 export default async (req: Request, _context: Context) => {
   let body: { job_id?: string };
@@ -23,6 +26,12 @@ export default async (req: Request, _context: Context) => {
     const [job] = await db.select().from(jobs).where(eq(jobs.id, jobId));
     if (!job || !job.blobKey) {
       return new Response("Job not found", { status: 404 });
+    }
+    if (job.panelGptStatus !== "pending") {
+      console.log(
+        `panel-gpt ${jobId}: already ${job.panelGptStatus}, skipping duplicate`,
+      );
+      return new Response("ok", { status: 200 });
     }
 
     await db
@@ -56,11 +65,25 @@ export default async (req: Request, _context: Context) => {
     if (!text) throw new Error("OpenAI response had no output_text");
     const result = parseDeepResult(text);
 
+    const reportPdf = await generateReportPdf(
+      (job.stage1Result as Record<string, unknown>) || null,
+      result,
+      { modelLabel: MODEL_LABEL },
+    );
+    const blobKey = `${jobId}/panel-gpt.pdf`;
+    const reports = getStore("reports");
+    const pdfArrayBuf = reportPdf.buffer.slice(
+      reportPdf.byteOffset,
+      reportPdf.byteOffset + reportPdf.byteLength,
+    ) as ArrayBuffer;
+    await reports.set(blobKey, pdfArrayBuf);
+
     await db
       .update(jobs)
       .set({
         panelGptStatus: "complete",
         panelGptResult: result,
+        panelGptBlobKey: blobKey,
         updatedAt: new Date(),
       })
       .where(eq(jobs.id, jobId));

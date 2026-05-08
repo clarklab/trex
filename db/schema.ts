@@ -20,14 +20,17 @@ export const jobs = pgTable("jobs", {
   panelClaudeStatus: text("panel_claude_status").notNull().default("pending"),
   panelClaudeResult: jsonb("panel_claude_result"),
   panelClaudeError: text("panel_claude_error"),
+  panelClaudeBlobKey: text("panel_claude_blob_key"),
 
   panelGptStatus: text("panel_gpt_status").notNull().default("pending"),
   panelGptResult: jsonb("panel_gpt_result"),
   panelGptError: text("panel_gpt_error"),
+  panelGptBlobKey: text("panel_gpt_blob_key"),
 
   panelGeminiStatus: text("panel_gemini_status").notNull().default("pending"),
   panelGeminiResult: jsonb("panel_gemini_result"),
   panelGeminiError: text("panel_gemini_error"),
+  panelGeminiBlobKey: text("panel_gemini_blob_key"),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

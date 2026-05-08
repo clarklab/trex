@@ -1,12 +1,15 @@
 import type { Config, Context } from "@netlify/functions";
 import { GoogleGenAI } from "@google/genai";
+import { getStore } from "@netlify/blobs";
 import { db } from "../../db/index.js";
 import { jobs } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 import { loadPdfBase64 } from "../lib/pdf-blob.js";
 import { buildDeepPromptForAttachment, parseDeepResult } from "../lib/deep-prompt.js";
+import { generateReportPdf } from "../lib/report-pdf.js";
 
 const MODEL = "gemini-2.5-pro";
+const MODEL_LABEL = "Gemini 2.5 Pro";
 
 export default async (req: Request, _context: Context) => {
   let body: { job_id?: string };
@@ -23,6 +26,12 @@ export default async (req: Request, _context: Context) => {
     const [job] = await db.select().from(jobs).where(eq(jobs.id, jobId));
     if (!job || !job.blobKey) {
       return new Response("Job not found", { status: 404 });
+    }
+    if (job.panelGeminiStatus !== "pending") {
+      console.log(
+        `panel-gemini ${jobId}: already ${job.panelGeminiStatus}, skipping duplicate`,
+      );
+      return new Response("ok", { status: 200 });
     }
 
     await db
@@ -58,11 +67,25 @@ export default async (req: Request, _context: Context) => {
     if (!responseText) throw new Error("Gemini response had no text");
     const result = parseDeepResult(responseText);
 
+    const reportPdf = await generateReportPdf(
+      (job.stage1Result as Record<string, unknown>) || null,
+      result,
+      { modelLabel: MODEL_LABEL },
+    );
+    const blobKey = `${jobId}/panel-gemini.pdf`;
+    const reports = getStore("reports");
+    const pdfArrayBuf = reportPdf.buffer.slice(
+      reportPdf.byteOffset,
+      reportPdf.byteOffset + reportPdf.byteLength,
+    ) as ArrayBuffer;
+    await reports.set(blobKey, pdfArrayBuf);
+
     await db
       .update(jobs)
       .set({
         panelGeminiStatus: "complete",
         panelGeminiResult: result,
+        panelGeminiBlobKey: blobKey,
         updatedAt: new Date(),
       })
       .where(eq(jobs.id, jobId));

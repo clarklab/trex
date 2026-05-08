@@ -156,6 +156,12 @@ export default async (req: Request, _context: Context) => {
       console.log(`quick-scan: job ${jobId} not processing (${job.status}), exiting`);
       return new Response("ok", { status: 200 });
     }
+    if (job.stage1Status !== "pending") {
+      console.log(
+        `quick-scan: job ${jobId} stage1 already ${job.stage1Status}, skipping duplicate`,
+      );
+      return new Response("ok", { status: 200 });
+    }
 
     await db
       .update(jobs)

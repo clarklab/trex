@@ -55,6 +55,7 @@ export async function openCheckout(jobId, tier, onPaid, onError) {
   }
 
   setupTabs();
+  setupCoupon(jobId, tier, onPaid);
 
   if (session.ln_available) {
     setupLightning(onPaid, onError, tier);
@@ -112,6 +113,78 @@ async function openPolarOverlay(onPaid, onError) {
   polarHandle.addEventListener("close", () => {
     polarHandle = null;
   });
+}
+
+function setupCoupon(jobId, tier, onPaid) {
+  const toggle = document.getElementById("coupon-toggle");
+  const form = document.getElementById("coupon-form");
+  const input = document.getElementById("coupon-input");
+  const apply = document.getElementById("coupon-apply");
+  const errEl = document.getElementById("coupon-error");
+  if (!toggle || !form || !input || !apply) return;
+
+  // Reset to closed state on each open.
+  form.hidden = true;
+  input.value = "";
+  if (errEl) errEl.hidden = true;
+
+  toggle.onclick = () => {
+    form.hidden = !form.hidden;
+    if (!form.hidden) input.focus();
+  };
+
+  const submit = async () => {
+    const code = input.value.trim();
+    if (!code) {
+      if (errEl) {
+        errEl.textContent = "Enter a code";
+        errEl.hidden = false;
+      }
+      return;
+    }
+    if (errEl) errEl.hidden = true;
+    apply.disabled = true;
+    const origLabel = apply.textContent;
+    apply.textContent = "Applying…";
+    try {
+      const res = await fetch("/api/redeem-coupon", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ job_id: jobId, tier, code }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.status !== "paid") {
+        const msg = data.error || `Redemption failed (${res.status})`;
+        if (errEl) {
+          errEl.textContent = msg;
+          errEl.hidden = false;
+        }
+        return;
+      }
+      if (polarHandle && typeof polarHandle.close === "function") {
+        try { polarHandle.close(); } catch {}
+      }
+      const dialog = document.getElementById("checkout-dialog");
+      if (dialog && dialog.open) dialog.close();
+      onPaid(data);
+    } catch (err) {
+      if (errEl) {
+        errEl.textContent = (err && err.message) || "Network error";
+        errEl.hidden = false;
+      }
+    } finally {
+      apply.disabled = false;
+      apply.textContent = origLabel;
+    }
+  };
+
+  apply.onclick = submit;
+  input.onkeydown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      submit();
+    }
+  };
 }
 
 function setupTabs() {

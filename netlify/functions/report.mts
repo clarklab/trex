@@ -41,24 +41,52 @@ export default async (req: Request, _context: Context) => {
   }
 
   if (format === "pdf") {
-    if (!isPaid || tier !== "single") {
+    if (!isPaid) {
       return new Response("Forbidden", { status: 403 });
     }
-    if (!job.reportBlobKey) {
+
+    const model = url.searchParams.get("model");
+    let blobKey: string | null = null;
+    let filename = "trec-report.pdf";
+
+    if (tier === "single") {
+      blobKey = job.reportBlobKey;
+      filename = "trec-report.pdf";
+    } else if (tier === "panel") {
+      if (model === "claude") {
+        blobKey = job.panelClaudeBlobKey;
+        filename = "trec-report-claude.pdf";
+      } else if (model === "gpt") {
+        blobKey = job.panelGptBlobKey;
+        filename = "trec-report-gpt.pdf";
+      } else if (model === "gemini") {
+        blobKey = job.panelGeminiBlobKey;
+        filename = "trec-report-gemini.pdf";
+      } else {
+        return Response.json(
+          { error: "Missing or invalid model param (claude|gpt|gemini)" },
+          { status: 400 },
+        );
+      }
+    } else {
+      return new Response("Forbidden", { status: 403 });
+    }
+
+    if (!blobKey) {
       return Response.json(
         { error: "Report not yet generated" },
         { status: 404 },
       );
     }
     const reports = getStore("reports");
-    const pdf = await reports.get(job.reportBlobKey, { type: "arrayBuffer" });
+    const pdf = await reports.get(blobKey, { type: "arrayBuffer" });
     if (!pdf) {
       return Response.json({ error: "Report missing" }, { status: 404 });
     }
     return new Response(pdf, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": 'attachment; filename="trec-report.pdf"',
+        "Content-Disposition": `attachment; filename="${filename}"`,
         "Cache-Control": "private, no-store",
       },
     });
@@ -97,18 +125,21 @@ export default async (req: Request, _context: Context) => {
         result: job.panelClaudeResult,
         error: job.panelClaudeError,
         model: "claude-opus-4-7",
+        pdf_available: !!job.panelClaudeBlobKey,
       },
       gpt: {
         status: job.panelGptStatus,
         result: job.panelGptResult,
         error: job.panelGptError,
         model: "gpt-5.5-pro",
+        pdf_available: !!job.panelGptBlobKey,
       },
       gemini: {
         status: job.panelGeminiStatus,
         result: job.panelGeminiResult,
         error: job.panelGeminiError,
         model: "gemini-2.5-pro",
+        pdf_available: !!job.panelGeminiBlobKey,
       },
     };
   } else {

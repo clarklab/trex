@@ -472,14 +472,23 @@
 
           <div class="panel-pane" data-pane="claude">
             <div class="panel-pane-loading">Claude is still drafting its review…</div>
+            <a class="btn primary panel-download" data-download="claude" hidden target="_blank" rel="noopener">
+              Download Claude's review (PDF)
+            </a>
             <div class="panel-pane-content" hidden></div>
           </div>
           <div class="panel-pane" data-pane="gpt" hidden>
             <div class="panel-pane-loading">GPT-5.5 Pro is still drafting its review…</div>
+            <a class="btn primary panel-download" data-download="gpt" hidden target="_blank" rel="noopener">
+              Download GPT's review (PDF)
+            </a>
             <div class="panel-pane-content" hidden></div>
           </div>
           <div class="panel-pane" data-pane="gemini" hidden>
             <div class="panel-pane-loading">Gemini 2.5 Pro is still drafting its review…</div>
+            <a class="btn primary panel-download" data-download="gemini" hidden target="_blank" rel="noopener">
+              Download Gemini's review (PDF)
+            </a>
             <div class="panel-pane-content" hidden></div>
           </div>
 
@@ -843,6 +852,24 @@
         </p>
         <button id="pay-card">Pay $5 with card</button>
         <p id="card-error" hidden></p>
+
+        <div class="coupon-section">
+          <button type="button" class="coupon-toggle" id="coupon-toggle">
+            Have a coupon code?
+          </button>
+          <div class="coupon-form" id="coupon-form" hidden>
+            <input
+              type="text"
+              id="coupon-input"
+              placeholder="Enter code"
+              autocomplete="off"
+              autocapitalize="characters"
+              spellcheck="false"
+            />
+            <button type="button" id="coupon-apply">Apply</button>
+            <p id="coupon-error" class="coupon-error" hidden></p>
+          </div>
+        </div>
       </div>
 
       <div id="ln-pane" class="pane" hidden>

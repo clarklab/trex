@@ -1571,3 +1571,62 @@ dialog .close:hover { color: var(--slate); }
 }
 .ln-actions button:hover, .ln-actions a:hover { border-color: #C9D2E0; }
 .ln-status { text-align: center; color: var(--muted); margin-top: 12px; font-size: 13px; }
+
+.coupon-section {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--hair);
+}
+.coupon-toggle {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--muted);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.coupon-toggle:hover { color: var(--slate); }
+.coupon-form[hidden] { display: none; }
+.coupon-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.coupon-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 11px;
+  font-family: inherit;
+  font-size: 13px;
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--slate);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.coupon-form input:focus { outline: none; border-color: var(--blue); }
+.coupon-form button {
+  padding: 9px 14px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--slate);
+  cursor: pointer;
+}
+.coupon-form button:hover:not(:disabled) { border-color: #C9D2E0; }
+.coupon-form button:disabled { opacity: 0.5; cursor: not-allowed; }
+.coupon-error {
+  flex-basis: 100%;
+  color: #B33B1F;
+  font-size: 12.5px;
+  margin: 4px 0 0;
+}

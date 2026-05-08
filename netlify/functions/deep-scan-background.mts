@@ -31,6 +31,12 @@ export default async (req: Request, _context: Context) => {
       console.log(`deep-scan: job ${jobId} not processing (${job.status})`);
       return new Response("ok", { status: 200 });
     }
+    if (job.stage2Status !== "pending") {
+      console.log(
+        `deep-scan: job ${jobId} stage2 already ${job.stage2Status}, skipping duplicate`,
+      );
+      return new Response("ok", { status: 200 });
+    }
 
     await db
       .update(jobs)

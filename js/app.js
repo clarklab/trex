@@ -252,6 +252,10 @@ function resetAll() {
   $("recovery-note").hidden = true;
   $("panel-recovery-note").hidden = true;
   $("download-pdf").hidden = true;
+  document.querySelectorAll(".panel-download").forEach((el) => {
+    el.hidden = true;
+    el.removeAttribute("href");
+  });
   $("unlock-single-btn").hidden = false;
   $("unlock-panel-btn").hidden = false;
   $("stage2-running").hidden = true;
@@ -688,6 +692,8 @@ function onPaid(data) {
     el.hidden = true;
   });
 
+  triggerFanOut(state.paidTier, state.jobId);
+
   if (state.paidTier === "panel") {
     $("panel-report").hidden = false;
     updatePanelTabStates();
@@ -701,6 +707,33 @@ function onPaid(data) {
         "Payment confirmed. Full report is still being generated…";
       if (!state.stopJobPoll) startJobPolling();
     }
+  }
+}
+
+// Browser-side fan-out trigger. Backend webhooks/redeem-coupon also attempt
+// this, but Netlify functions sometimes can't fetch their own backgrounds
+// (~10s same-host fetch failure), so the browser is the reliable path.
+// Background functions are idempotent — duplicates short-circuit.
+const triggeredFanOuts = new Set();
+function triggerFanOut(tier, jobId) {
+  if (!jobId) return;
+  const key = `${tier}:${jobId}`;
+  if (triggeredFanOuts.has(key)) return;
+  triggeredFanOuts.add(key);
+
+  const fns = tier === "panel"
+    ? ["panel-claude-background", "panel-gpt-background", "panel-gemini-background"]
+    : ["deep-scan-background"];
+
+  for (const fn of fns) {
+    fetch(`/.netlify/functions/${fn}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ job_id: jobId }),
+      keepalive: true,
+    }).catch((err) => {
+      console.warn(`Browser-side ${fn} trigger failed:`, err);
+    });
   }
 }
 
@@ -721,6 +754,20 @@ async function loadPanelReport() {
       if (result && !state.panelResults[k]) {
         state.panelResults[k] = result;
         renderPanelPane(k, result);
+      }
+      const pdfReady = !!data.panel[k]?.pdf_available;
+      const dl = document.querySelector(`.panel-download[data-download="${k}"]`);
+      if (dl) {
+        if (pdfReady && state.downloadToken && state.jobId) {
+          dl.href =
+            `/api/report?id=${encodeURIComponent(state.jobId)}` +
+            `&token=${encodeURIComponent(state.downloadToken)}` +
+            `&format=pdf&model=${k}`;
+          dl.hidden = false;
+        } else {
+          dl.hidden = true;
+          dl.removeAttribute("href");
+        }
       }
     });
     updatePanelTabStates();
@@ -923,6 +970,11 @@ async function checkRecoveryUrl() {
 
     if (state.paidTier === "panel" && data.panel) {
       $("panel-report").hidden = false;
+      const anyPanelPending = ["claude", "gpt", "gemini"].some(
+        (k) => (data.panel[k]?.status || "pending") === "pending",
+      );
+      if (anyPanelPending) triggerFanOut("panel", job);
+
       ["claude", "gpt", "gemini"].forEach((k) => {
         const result = data.panel[k]?.result;
         const status = data.panel[k]?.status;
@@ -931,9 +983,22 @@ async function checkRecoveryUrl() {
           state.panelResults[k] = result;
           renderPanelPane(k, result);
         }
+        const pdfReady = !!data.panel[k]?.pdf_available;
+        const dl = document.querySelector(`.panel-download[data-download="${k}"]`);
+        if (dl && pdfReady) {
+          dl.href =
+            `/api/report?id=${encodeURIComponent(job)}` +
+            `&token=${encodeURIComponent(token)}` +
+            `&format=pdf&model=${k}`;
+          dl.hidden = false;
+        }
       });
       updatePanelTabStates();
-      setupPanelRecoveryUrl();
+      if (!anyPanelPending) {
+        setupPanelRecoveryUrl();
+      } else if (!state.stopJobPoll) {
+        startJobPolling();
+      }
     } else if (state.paidTier === "single") {
       state.stage2 = data.stage2?.result;
       if (state.stage2) {
@@ -943,6 +1008,10 @@ async function checkRecoveryUrl() {
         $("download-pdf").href =
           `/api/report?id=${encodeURIComponent(job)}&token=${encodeURIComponent(token)}&format=pdf`;
         setupRecoveryUrl();
+      } else if ((data.stage2?.status || "pending") === "pending") {
+        // Recovery URL hit but stage2 hasn't run yet — trigger and poll.
+        triggerFanOut("single", job);
+        if (!state.stopJobPoll) startJobPolling();
       }
     }
   } catch (err) {
