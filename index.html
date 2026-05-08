@@ -2,93 +2,385 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>TREC Contract Red Flag Scanner</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Trex — AI review for TREC real estate contracts in Texas</title>
+    <meta
+      name="description"
+      content="Drop a TREC contract — One to Four Family, Farm &amp; Ranch, Condo, New Home, and every standard Texas Real Estate Commission form. Trex reviews it in plain English in 30 seconds."
+    />
+    <meta
+      name="keywords"
+      content="TREC contract review, Texas Real Estate Commission, One to Four Family Residential Contract, TREC 20-18, Farm and Ranch Contract, Residential Condominium Contract, New Home Contract, Unimproved Property Contract, Seller's Disclosure Notice, Third Party Financing Addendum"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@8..36,400;8..36,500;8..36,600;8..36,700&family=JetBrains+Mono:wght@400;500&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="/styles.css" />
     <script src="https://js.stripe.com/v3/"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
   </head>
   <body>
-    <main>
-      <header>
-        <h1>TREC Contract Red Flag Scanner</h1>
-        <p class="tagline">
-          Drag a TREC contract PDF. Get a free summary and red-flag check in
-          under a minute. Unlock the full report for $5.
-        </p>
-      </header>
-
-      <section id="drop-section">
-        <div id="drop-zone">
-          <div class="drop-prompt">
-            <p class="drop-headline">Drop your TREC contract PDF here</p>
-            <p class="drop-sub">or click to browse · max 10 MB</p>
-          </div>
-          <input type="file" id="file-input" accept="application/pdf" hidden />
+    <div class="page">
+      <nav class="nav">
+        <div class="brand">
+          <div class="mark">T</div>
+          <span>trex</span>
         </div>
-        <p id="drop-error" class="error" hidden></p>
-      </section>
-
-      <section id="upload-section" hidden>
-        <p id="upload-status">Preparing upload...</p>
-        <div class="progress">
-          <div id="upload-bar" class="progress-bar"></div>
+        <div class="nav-links">
+          <a href="#how">How it works</a>
+          <a href="#forms">Forms</a>
+          <a href="#faq">FAQ</a>
         </div>
-      </section>
+        <button class="nav-cta">Sign in</button>
+      </nav>
 
-      <section id="scanning-section" hidden>
-        <div class="spinner"></div>
-        <p id="scan-status">Analyzing your contract...</p>
-      </section>
-
-      <section id="preview-section" hidden>
-        <h2>Free preview</h2>
-        <div class="preview-card">
-          <div id="preview-form" class="preview-row"></div>
-          <div id="preview-mods" class="preview-row"></div>
-          <div class="preview-row">
-            <h3>Top red flags</h3>
-            <ul id="preview-flags"></ul>
-          </div>
-          <div class="preview-row">
-            <h3>Basic terms</h3>
-            <table id="preview-terms"></table>
-          </div>
-        </div>
-
-        <div id="stage2-progress" class="stage2-progress" hidden>
-          <span class="dot"></span>
-          <span>Full analysis in progress...</span>
-        </div>
-        <div id="stage2-error" class="error" hidden></div>
-
-        <button id="unlock-btn" class="primary" hidden>
-          Unlock full report &mdash; $5
-        </button>
-      </section>
-
-      <section id="paid-progress-section" hidden>
-        <p class="paid-progress-note">
-          Payment confirmed. Your full report is still being generated...
-        </p>
-        <div class="spinner"></div>
-      </section>
-
-      <section id="report-section" hidden>
-        <h2>Full Report</h2>
-        <div class="report-actions">
-          <a id="download-pdf" class="primary" target="_blank" rel="noopener">
-            Download PDF
-          </a>
-        </div>
-        <div id="recovery-note" class="recovery-note" hidden>
-          <p>
-            <strong>Bookmark this URL.</strong> There are no accounts &mdash; if
-            you close this tab without bookmarking, you'll lose access.
+      <section class="hero">
+        <div class="mascot" role="img" aria-label="Trex mascot"></div>
+        <div class="copy">
+          <span class="eyebrow">
+            <span class="dot"></span> Built for Texas Real Estate Commission forms
+          </span>
+          <h1>AI review for your<br /><em>TREC contracts.</em></h1>
+          <p class="sub">
+            Drop a Texas Real Estate Commission contract — One to Four Family,
+            Farm &amp; Ranch, Condo, New Home, or any standard addendum. Trex
+            flags risky clauses, missed deadlines, and seller traps in plain
+            English. ~30 seconds. No login.
           </p>
-          <code id="recovery-url"></code>
         </div>
-        <div class="report-body">
+      </section>
+
+      <div class="drop-wrap">
+        <!-- IDLE -->
+        <div id="drop-idle" class="drop" data-state="idle">
+          <input
+            id="file-input"
+            class="file-in"
+            type="file"
+            accept="application/pdf,.pdf"
+          />
+          <div class="drop-illu" aria-hidden="true">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M12 16V4" />
+              <path d="M7 9l5-5 5 5" />
+              <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+            </svg>
+          </div>
+          <p class="drop-title">Drop your contract here</p>
+          <p class="drop-sub">
+            or click to browse — PDF, up to 10MB
+          </p>
+          <div class="meta-row">
+            <span>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="4" y="11" width="16" height="10" rx="2" />
+                <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+              </svg>
+              Encrypted
+            </span>
+            <span>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M13 2 4 14h7l-1 8 9-12h-7z" />
+              </svg>
+              Reviewed in ~30s
+            </span>
+            <span>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              Never shared
+            </span>
+          </div>
+          <p id="drop-error" class="error-msg" hidden></p>
+        </div>
+
+        <!-- FILE SELECTED -->
+        <div id="drop-file" class="drop fade-in" data-state="file" hidden>
+          <div class="file-confirm">
+            <div class="file-confirm-row">
+              <div class="doc-icon">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"
+                  />
+                  <path d="M14 3v5h5" />
+                  <path d="M9 13h6M9 17h4" />
+                </svg>
+              </div>
+              <div style="text-align: left">
+                <div id="file-name" class="doc-name"></div>
+                <div id="file-stats" class="doc-stats">ready to review</div>
+              </div>
+            </div>
+            <div class="file-confirm-actions">
+              <button id="analyze-btn" class="btn primary">
+                Review this contract
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.7"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M5 12h14" />
+                  <path d="M13 6l6 6-6 6" />
+                </svg>
+              </button>
+              <button id="reset-file-btn" class="btn ghost">
+                Choose a different file
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ANALYZING -->
+        <div
+          id="drop-analyzing"
+          class="drop fade-in"
+          data-state="analyzing"
+          hidden
+        >
+          <div class="analyzing">
+            <div class="analyzing-head">
+              <div class="file-pill">
+                <span class="ic">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"
+                    />
+                    <path d="M14 3v5h5" />
+                  </svg>
+                </span>
+                <span id="analyzing-file-name"></span>
+              </div>
+              <div
+                class="mono"
+                id="progress-pct"
+                style="font-size: 12px; color: var(--muted)"
+              >
+                0%
+              </div>
+            </div>
+            <div class="progress-track">
+              <div id="progress-fill" class="progress-fill"></div>
+            </div>
+            <div class="steps" id="steps">
+              <div class="step" data-step="0">
+                <span class="tick"></span>
+                <span>Reading document</span>
+              </div>
+              <div class="step" data-step="1">
+                <span class="tick"></span>
+                <span>Extracting clauses</span>
+              </div>
+              <div class="step" data-step="2">
+                <span class="tick"></span>
+                <span>Checking risk patterns</span>
+              </div>
+              <div class="step" data-step="3">
+                <span class="tick"></span>
+                <span>Drafting summary</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RESULTS -->
+        <div
+          id="drop-results"
+          class="drop fade-in"
+          data-state="results"
+          hidden
+        >
+          <div class="results">
+            <div class="results-head">
+              <div class="left">
+                <div class="doc-icon">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"
+                    />
+                    <path d="M14 3v5h5" />
+                    <path d="M9 13h6M9 17h4" />
+                  </svg>
+                </div>
+                <div class="doc-meta">
+                  <div id="results-file-name" class="doc-name"></div>
+                  <div id="results-file-stats" class="doc-stats"></div>
+                </div>
+              </div>
+              <div
+                id="results-badges"
+                style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap"
+              ></div>
+            </div>
+
+            <div class="results-body">
+              <div class="col">
+                <h4>Plain-language summary</h4>
+                <p id="result-form" class="summary"></p>
+                <p id="result-mods" class="summary"></p>
+                <h4 style="margin-top: 24px">Key terms</h4>
+                <p id="result-terms" class="summary" style="margin: 0"></p>
+              </div>
+
+              <div class="col">
+                <h4>
+                  Issues
+                  <span
+                    id="issue-count"
+                    style="color: #9aa3b2; font-weight: 500; margin-left: 6px"
+                  ></span>
+                </h4>
+                <div id="issues" class="issues"></div>
+                <p
+                  id="stage2-running"
+                  class="summary"
+                  style="margin-top: 14px; font-size: 13px; color: var(--muted)"
+                  hidden
+                >
+                  Full clause-by-clause analysis still running…
+                </p>
+                <p
+                  id="stage2-error"
+                  class="summary"
+                  style="margin-top: 14px; font-size: 13px; color: #b33b1f"
+                  hidden
+                ></p>
+              </div>
+            </div>
+
+            <div class="actions">
+              <div style="font-size: 12px; color: var(--muted); max-width: 420px">
+                Heads up — Trex is a guide, not legal advice. For high-stakes
+                deals, loop in a lawyer.
+              </div>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap">
+                <button id="reset-btn" class="btn">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.7"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+                    <path d="M21 3v5h-5" />
+                    <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+                    <path d="M3 21v-5h5" />
+                  </svg>
+                  Review another
+                </button>
+                <button id="unlock-btn" class="btn unlock" hidden>
+                  Unlock full report — $5
+                </button>
+                <a
+                  id="download-pdf"
+                  class="btn primary"
+                  hidden
+                  target="_blank"
+                  rel="noopener"
+                >
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.7"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M12 4v12" />
+                    <path d="M7 11l5 5 5-5" />
+                    <path d="M4 20h16" />
+                  </svg>
+                  Download PDF
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FULL REPORT (after payment) -->
+        <section
+          id="full-report"
+          class="full-report-section fade-in"
+          hidden
+        >
           <h3>Summary</h3>
           <p id="report-summary"></p>
 
@@ -97,52 +389,289 @@
 
           <h3>Full Terms</h3>
           <table id="report-terms"></table>
+
+          <div id="recovery-note" class="recovery-note" hidden>
+            <strong>Bookmark this URL.</strong> There are no accounts —
+            if you close this tab without bookmarking, you'll lose access.
+            <code id="recovery-url"></code>
+          </div>
+        </section>
+      </div>
+
+      <section class="section" id="how">
+        <div class="section-h">
+          <div>
+            <div class="kicker">How it works</div>
+            <h2>Three steps. No setup.</h2>
+          </div>
+        </div>
+        <div class="three">
+          <div class="card">
+            <div class="step-icon">
+              <span class="msym">upload_file</span>
+            </div>
+            <div class="num">01 · Drop</div>
+            <h3>Drop the TREC PDF</h3>
+            <p>
+              Any TREC-promulgated form — resale, new home, condo, farm &amp;
+              ranch, addenda. Up to 10MB. Encrypted in transit, deleted within
+              24 hours.
+            </p>
+          </div>
+          <div class="card">
+            <div class="step-icon">
+              <span class="msym">policy</span>
+            </div>
+            <div class="num">02 · Review</div>
+            <h3>We read every paragraph</h3>
+            <p>
+              Trex checks each paragraph against the current TREC form, flags
+              missing dates, blank addenda, and unusual clauses with a citation
+              back to the page.
+            </p>
+          </div>
+          <div class="card">
+            <div class="step-icon">
+              <span class="msym">edit_note</span>
+            </div>
+            <div class="num">03 · Negotiate</div>
+            <h3>Plain-English summary</h3>
+            <p>
+              A short brief on what you're signing, the issues that matter, and
+              suggested redlines you can paste into your reply or share with
+              your broker.
+            </p>
+          </div>
         </div>
       </section>
 
-      <dialog id="checkout-dialog">
-        <button class="close" aria-label="Close" data-close>&times;</button>
-        <h2>Unlock full report</h2>
-        <p class="dialog-sub">$5.00 USD &mdash; one-time, no account.</p>
-
-        <div class="tabs">
-          <button data-tab="card" class="tab active">Card</button>
-          <button data-tab="lightning" class="tab" id="ln-tab" hidden>
-            &#9889; Lightning
-          </button>
-        </div>
-
-        <div id="card-pane" class="pane">
-          <div id="payment-element"></div>
-          <button id="pay-card" class="primary" disabled>Pay $5</button>
-          <p id="card-error" class="error" hidden></p>
-        </div>
-
-        <div id="ln-pane" class="pane" hidden>
-          <canvas id="qr"></canvas>
-          <p id="ln-amount" class="ln-amount"></p>
-          <div class="ln-actions">
-            <button id="copy-invoice">Copy invoice</button>
-            <a id="ln-link" href="#">Open in wallet</a>
+      <section class="section" id="forms">
+        <div class="section-h">
+          <div>
+            <div class="kicker">TREC forms</div>
+            <h2>Reviews tuned for every Texas form.</h2>
           </div>
-          <p id="ln-status" class="ln-status">Waiting for payment...</p>
-          <button id="refresh-invoice" class="secondary" hidden>
-            Refresh invoice
-          </button>
+          <a href="#all-forms" class="section-h-link">See all 47 forms →</a>
         </div>
-      </dialog>
+        <div class="farm">
+          <a class="form-card" href="/forms/one-to-four-family-residential-resale">
+            <span class="num-pill">TREC 20-18</span>
+            <h3>One to Four Family Residential Contract (Resale)</h3>
+            <p>
+              The standard resale contract for single-family homes, duplexes,
+              triplexes, and fourplexes. Texas's most-used real estate form.
+            </p>
+            <span class="go">Review this form →</span>
+          </a>
+          <a class="form-card" href="/forms/residential-condominium-resale">
+            <span class="num-pill">TREC 30-17</span>
+            <h3>Residential Condominium Contract (Resale)</h3>
+            <p>
+              For the purchase of an existing condo unit. Includes HOA
+              resale-certificate handling and condo-association disclosures.
+            </p>
+            <span class="go">Review this form →</span>
+          </a>
+          <a class="form-card" href="/forms/new-home-completed-construction">
+            <span class="num-pill">TREC 24-19</span>
+            <h3>New Home Contract (Completed Construction)</h3>
+            <p>
+              For new homes already built and ready to close. Reviews builder
+              warranties and standard new-construction provisions.
+            </p>
+            <span class="go">Review this form →</span>
+          </a>
+          <a class="form-card" href="/forms/new-home-incomplete-construction">
+            <span class="num-pill">TREC 23-19</span>
+            <h3>New Home Contract (Incomplete Construction)</h3>
+            <p>
+              For homes still under construction. Trex flags missing milestones,
+              change-order language, and substantial-completion dates.
+            </p>
+            <span class="go">Review this form →</span>
+          </a>
+          <a class="form-card" href="/forms/farm-and-ranch">
+            <span class="num-pill">TREC 25-15</span>
+            <h3>Farm and Ranch Contract</h3>
+            <p>
+              For rural, agricultural, or large-acreage properties. Includes
+              mineral, water, hunting, and surface-rights review.
+            </p>
+            <span class="go">Review this form →</span>
+          </a>
+          <a class="form-card" href="/forms/unimproved-property">
+            <span class="num-pill">TREC 9-16</span>
+            <h3>Unimproved Property Contract</h3>
+            <p>
+              For raw land — vacant lots, acreage tracts, undeveloped parcels.
+              Reviews access, easements, and survey contingencies.
+            </p>
+            <span class="go">Review this form →</span>
+          </a>
+          <a class="form-card" href="/forms/sellers-disclosure-notice">
+            <span class="num-pill">TREC OP-H</span>
+            <h3>Seller's Disclosure Notice</h3>
+            <p>
+              Texas-required disclosure of known property conditions, defects,
+              repairs, and environmental hazards. Trex flags inconsistent or
+              vague answers.
+            </p>
+            <span class="go">Review this form →</span>
+          </a>
+          <a class="form-card" href="/forms/third-party-financing-addendum">
+            <span class="num-pill">TREC 40-11</span>
+            <h3>Third Party Financing Addendum</h3>
+            <p>
+              For conventional, FHA, VA, or USDA loans. Reviews financing type,
+              terms, and contingency-deadline math against the main contract.
+            </p>
+            <span class="go">Review this form →</span>
+          </a>
+        </div>
+        <div class="farm-foot">
+          <div>
+            Also covered: addenda for POA membership, hydrostatic testing,
+            coastal area property, back-up contracts, lead-based paint,
+            residential leases, loan assumption, and more.
+          </div>
+          <a href="#all-forms">Browse all forms →</a>
+        </div>
+      </section>
+
+      <section class="section" id="faq">
+        <div class="section-h">
+          <div>
+            <div class="kicker">FAQ</div>
+            <h2>TREC contract review, answered.</h2>
+          </div>
+        </div>
+        <div class="faq">
+          <details>
+            <summary>Which TREC forms does Trex support?</summary>
+            <p>
+              Every standard TREC-promulgated form — One to Four Family
+              Residential (Resale) TREC 20-18, Residential Condominium (Resale)
+              TREC 30-17, New Home Contracts TREC 23/24, Farm and Ranch TREC
+              25-15, Unimproved Property TREC 9-16, plus the Seller's Disclosure
+              Notice, Third Party Financing Addendum, and every common addendum.
+            </p>
+          </details>
+          <details>
+            <summary>Is this legal advice?</summary>
+            <p>
+              No. Trex is a fast second opinion that helps Texas buyers,
+              sellers, and agents understand a contract before they sign. For
+              high-stakes transactions, your broker or a Texas-licensed
+              attorney should still review the final document.
+            </p>
+          </details>
+          <details>
+            <summary>What does Trex actually check?</summary>
+            <p>
+              Blank required fields, missing effective dates, mismatched
+              addenda, unusual special provisions, financing-contingency
+              timelines, option period and termination math, mandatory POA
+              disclosures, lead-based paint disclosures for pre-1978 homes, and
+              seller-disclosure red flags.
+            </p>
+          </details>
+          <details>
+            <summary>What happens to my document?</summary>
+            <p>
+              Files are encrypted in transit, processed in memory, and deleted
+              within 24 hours. We don't train models on your contracts and we
+              don't share them with third parties.
+            </p>
+          </details>
+          <details>
+            <summary>Does Trex work for non-TREC contracts?</summary>
+            <p>
+              The TREC forms are where Trex is sharpest. It also handles common
+              Texas commercial leases, listing agreements, and buyer
+              representation agreements — but with less depth than the
+              promulgated forms.
+            </p>
+          </details>
+        </div>
+      </section>
+
+      <section class="seo-prose" aria-label="About TREC contract review">
+        <p>
+          <b>Trex is built for Texas.</b> The Texas Real Estate Commission
+          promulgates the standard contract forms used in nearly every
+          residential transaction in the state — the One to Four Family
+          Residential Contract (Resale), the Residential Condominium Contract,
+          the New Home Contracts, the Farm and Ranch Contract, and the
+          Unimproved Property Contract. Every Texas buyer, seller, agent, and
+          broker eventually has to make sense of one.
+        </p>
+        <p>
+          These forms are dense.
+          <b>TREC 20-18 alone is eleven pages</b> of paragraphs, blanks,
+          deadlines, and addenda — and a missing initial or a wrong-day
+          deadline can void a contingency or cost a buyer their earnest money.
+          Trex reads each paragraph against the current TREC version, surfaces
+          the blanks that haven't been filled, the dates that don't add up, and
+          the special provisions that don't belong, with a citation back to the
+          exact page.
+        </p>
+        <p>
+          <b>Designed for agents and consumers.</b> Real estate license holders
+          in Texas can't give legal advice on contract language — Trex doesn't
+          either. What it does is give you a fast, plain-English read on
+          what's in front of you so you can have a smarter conversation with
+          your client, your broker, or your attorney before you sign.
+        </p>
+        <p>
+          <b>Coverage today:</b> the One to Four Family Residential Contract
+          (Resale, TREC 20-18), Residential Condominium Contract (Resale, TREC
+          30-17), New Home Contracts (TREC 23-19 and 24-19), Farm and Ranch
+          Contract (TREC 25-15), Unimproved Property Contract (TREC 9-16),
+          Seller's Disclosure Notice, Third Party Financing Addendum (TREC
+          40-11), Addendum for Property Subject to Mandatory POA Membership,
+          Buyer's and Seller's Temporary Residential Lease, Loan Assumption
+          Addendum, and every other current TREC-promulgated form.
+        </p>
+      </section>
 
       <footer>
-        <p class="disclaimer">
-          This tool provides automated analysis of TREC contract forms and is
-          NOT legal advice. It is not a substitute for review by a licensed
-          Texas real estate attorney. No attorney-client relationship is
-          created by using this tool. Contracts are not stored beyond the
-          active session and are deleted within 24 hours. This tool covers
-          Texas TREC forms only.
-        </p>
+        <div>© 2026 Trex Labs · Not a law firm</div>
+        <div>
+          <a href="#">Privacy</a>
+          <a href="#">Terms</a>
+          <a href="#">Contact</a>
+        </div>
       </footer>
-    </main>
+    </div>
+
+    <dialog id="checkout-dialog">
+      <button class="close" aria-label="Close" data-close>&times;</button>
+      <h2>Unlock full report</h2>
+      <p class="dialog-sub">$5.00 USD — one-time, no account.</p>
+
+      <div class="tabs">
+        <button data-tab="card" class="tab active">Card</button>
+        <button data-tab="lightning" class="tab" id="ln-tab" hidden>
+          ⚡ Lightning
+        </button>
+      </div>
+
+      <div id="card-pane" class="pane">
+        <div id="payment-element"></div>
+        <button id="pay-card" disabled>Pay $5</button>
+        <p id="card-error" hidden></p>
+      </div>
+
+      <div id="ln-pane" class="pane" hidden>
+        <canvas id="qr"></canvas>
+        <p id="ln-amount" class="ln-amount"></p>
+        <div class="ln-actions">
+          <button id="copy-invoice">Copy invoice</button>
+          <a id="ln-link" href="#">Open in wallet</a>
+        </div>
+        <p id="ln-status" class="ln-status">Waiting for payment…</p>
+      </div>
+    </dialog>
 
     <script type="module" src="/js/app.js"></script>
   </body>
