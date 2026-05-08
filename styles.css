@@ -17,6 +17,10 @@
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
 
 /* Cross-document view transitions (Chromium 126+; gracefully ignored
    elsewhere). Pairs with site.js for a CSS-only fallback fade on
@@ -398,11 +402,10 @@ h1 em { font-style: normal; color: var(--blue); }
   margin-bottom: 24px; flex-wrap: wrap; gap: 8px;
 }
 .kicker {
-  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
   font-size: 13px; letter-spacing: .08em; text-transform: uppercase;
   color: var(--blue); font-weight: 600;
 }
-.section h2 { font-size: 24px; letter-spacing: -0.02em; font-weight: 600; margin: 14px 0 0; }
+.section h2 { font-size: 24px; letter-spacing: -0.02em; font-weight: 600; margin: 10px 0 0; }
 .section-h-link { font-size: 13px; color: var(--muted); text-decoration: none; }
 .section-h-link:hover { color: var(--slate); }
 
