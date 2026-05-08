@@ -517,6 +517,32 @@ h1 em { font-style: normal; color: var(--blue); }
 
 .file-in { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 
+/* Demo CTA — small tertiary link below the drop zone */
+.demo-cta-row { margin-top: 14px; text-align: center; }
+.demo-cta {
+  background: none;
+  border: 0;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 8px 14px;
+  border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: color .15s, background .15s;
+}
+.demo-cta:hover { color: var(--blue); background: rgba(37, 99, 235, 0.06); }
+.demo-cta .msym {
+  font-size: 16px;
+  font-variation-settings: 'opsz' 20, 'wght' 600, 'FILL' 1, 'GRAD' 0;
+  color: var(--blue);
+}
+.demo-cta .demo-cta-hint { color: #9aa3b2; font-weight: 400; }
+@media (max-width: 540px) {
+  .demo-cta .demo-cta-hint { display: none; }
+}
+
 /* file selected state */
 .file-confirm { padding: 28px 24px; }
 .file-confirm-row {

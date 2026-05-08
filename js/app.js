@@ -18,6 +18,65 @@ const state = {
   panelStatus: { claude: "pending", gpt: "pending", gemini: "pending" },
   panelResults: { claude: null, gpt: null, gemini: null },
   stopJobPoll: null,
+  demo: false,
+};
+
+const DEMO_STAGE1 = {
+  form_id: "20-18",
+  form_name: "One to Four Family Residential Contract (Resale)",
+  confidence: 95,
+  page_count: 12,
+  property_address: "2117 Whisper Ridge Ln, Round Rock, TX 78664",
+  modification_count: 2,
+  status: "needs_attention",
+  severity_high: 0,
+  severity_medium: 2,
+  red_flags: [
+    { title: "Option fee on the low side for this price", severity: "medium" },
+    { title: "Non-standard language in §11", severity: "medium" },
+  ],
+  terms: {
+    sales_price: {
+      value: "$480,000",
+      note: "$96,000 cash + $384,000 financed · §3",
+      warning: null,
+    },
+    earnest_money: {
+      value: "$4,800",
+      note: "1.0% of sales price · §5A",
+      warning: null,
+    },
+    option_fee_period: {
+      value: "$300 · 7 days",
+      note: "Option Fee §5A; Option Period §5B",
+      warning: "Below typical: $400-600 for this price band",
+    },
+    title_notice_period: {
+      value: "5 days",
+      note: "Standard · §6D",
+      warning: null,
+    },
+    closing_date: {
+      value: "Jul 22, 2026",
+      note: "45 days from effective · §9",
+      warning: null,
+    },
+    financing: {
+      value: "Conventional",
+      note: "$384,000 · 80% LTV · §40-11 Third Party Financing Addendum",
+      warning: null,
+    },
+    survey: {
+      value: "Buyer pays",
+      note: "§6C(2) · existing survey",
+      warning: null,
+    },
+    special_provisions: {
+      value: "Custom language",
+      note: "§22 · 3 lines added · review recommended",
+      warning: "Includes language beyond standard form",
+    },
+  },
 };
 
 const $ = (id) => document.getElementById(id);
@@ -29,6 +88,8 @@ function setStage(name) {
     const el = $(`drop-${s}`);
     if (el) el.hidden = s !== name;
   });
+  const demoRow = $("demo-cta-row");
+  if (demoRow) demoRow.hidden = name !== "idle";
 }
 
 function showError(msg) {
@@ -118,23 +179,29 @@ function setupButtons() {
   // #reset-btn was removed from the rich card per design; keep guarded
   // in case it returns or other surfaces reuse the id.
   $("reset-btn")?.addEventListener("click", resetAll);
-  $("unlock-single-btn").addEventListener("click", () => {
-    openCheckout(state.jobId, "single", onPaid, (err) => console.error(err));
-  });
-  $("unlock-panel-btn").addEventListener("click", () => {
-    openCheckout(state.jobId, "panel", onPaid, (err) => console.error(err));
-  });
+  const tryCheckout = (tier) => {
+    if (state.demo) {
+      flashDemoNotice();
+      return;
+    }
+    if (!state.jobId) return;
+    openCheckout(state.jobId, tier, onPaid, (err) => console.error(err));
+  };
+
+  $("unlock-single-btn").addEventListener("click", () => tryCheckout("single"));
+  $("unlock-panel-btn").addEventListener("click", () => tryCheckout("panel"));
   // Locked feature CTAs and the agent-cta strip both delegate to the
   // openCheckout flow with the tier baked into data-tier.
   document
     .querySelectorAll(".locked-cta, .agent-cta-btn")
     .forEach((btn) => {
       btn.addEventListener("click", () => {
-        if (!state.jobId) return;
         const tier = btn.dataset.tier === "panel" ? "panel" : "single";
-        openCheckout(state.jobId, tier, onPaid, (err) => console.error(err));
+        tryCheckout(tier);
       });
     });
+
+  $("demo-scan-btn")?.addEventListener("click", runDemoScan);
 
   document.querySelectorAll(".panel-tab").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -194,9 +261,70 @@ function resetAll() {
   });
   state.panelStatus = { claude: "pending", gpt: "pending", gemini: "pending" };
   state.panelResults = { claude: null, gpt: null, gemini: null };
+  state.demo = false;
   setMascotRawring(false);
   history.replaceState({}, "", "/");
   setStage("idle");
+}
+
+async function runDemoScan() {
+  if (state.demo) return; // already running / shown
+  state.demo = true;
+  state.pickedFile = {
+    name: "demo-contract.pdf",
+    size: 5_400_000,
+    type: "application/pdf",
+  };
+  state.jobId = "demo";
+  $("analyzing-file-name").textContent = state.pickedFile.name;
+
+  setStepState(0, "active");
+  setProgress(5);
+  setStage("analyzing");
+  setMascotRawring(true);
+
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  await wait(450);
+  setStepState(0, "done");
+  setStepState(1, "active");
+  setProgress(28);
+  await wait(700);
+  setProgress(45);
+  await wait(700);
+  setStepState(1, "done");
+  setStepState(2, "active");
+  setProgress(65);
+  await wait(800);
+  setStepState(2, "done");
+  setStepState(3, "active");
+  setProgress(88);
+  await wait(700);
+  setStepState(3, "done");
+  setProgress(100);
+  await wait(250);
+
+  state.stage1 = DEMO_STAGE1;
+  state.stage1Status = "complete";
+  renderFreePreview(DEMO_STAGE1);
+  setStage("results");
+  setMascotRawring(false);
+}
+
+function flashDemoNotice() {
+  // Briefly turn the agent-cta paragraph into a demo notice, then
+  // restore it. No alert/modal — feels native to the layout.
+  const p = document.querySelector(".agent-cta p");
+  if (!p) return;
+  if (p.dataset.flashing === "1") return;
+  p.dataset.flashing = "1";
+  const original = p.innerHTML;
+  p.innerHTML =
+    "<strong>This is a demo.</strong> Drop your own TREC contract above to unlock paid features.";
+  setTimeout(() => {
+    p.innerHTML = original;
+    p.dataset.flashing = "";
+  }, 2400);
 }
 
 async function startAnalysis(file) {
