@@ -368,7 +368,7 @@ function renderFreePreview(s1) {
   const conf = s1?.confidence ?? "?";
   $("result-form").innerHTML =
     `Detected as <b>${escapeHtml(formName)}</b> (${escapeHtml(String(conf))}% confidence). ` +
-    `Trex compared this contract against the published TREC standard form and found ` +
+    `T-REX compared this contract against the published TREC standard form and found ` +
     `<b>${modCount} modifications</b>.`;
 
   if (flagCount > 0) {
