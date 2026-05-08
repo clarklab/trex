@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { db } from "../../db/index.js";
 import { checkoutSessions } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
+import { fanOutForTier, type Tier } from "../lib/fanout.js";
 
 export default async (req: Request, _context: Context) => {
   if (req.method !== "POST") {
@@ -59,6 +60,8 @@ export default async (req: Request, _context: Context) => {
           paidAt: new Date(),
         })
         .where(eq(checkoutSessions.id, sessionId));
+
+      fanOutForTier(session.tier as Tier, session.jobId);
     }
   }
 

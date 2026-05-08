@@ -4,9 +4,16 @@ import { db } from "../../db/index.js";
 import { jobs, checkoutSessions } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 import { fetchLnurlInvoice, usdToSats } from "../lib/lightning.js";
+import type { Tier } from "../lib/fanout.js";
 
-const PRICE_USD = 5;
-const PRICE_CENTS = PRICE_USD * 100;
+const TIER_PRICES: Record<Tier, number> = {
+  single: 5,
+  panel: 12,
+};
+
+function isTier(t: unknown): t is Tier {
+  return t === "single" || t === "panel";
+}
 
 export default async (req: Request, _context: Context) => {
   if (req.method !== "POST") {
@@ -19,7 +26,7 @@ export default async (req: Request, _context: Context) => {
   }
   const lnAddress = Netlify.env.get("ALBY_LN_ADDRESS");
 
-  let body: { job_id?: string };
+  let body: { job_id?: string; tier?: string };
   try {
     body = await req.json();
   } catch {
@@ -30,6 +37,10 @@ export default async (req: Request, _context: Context) => {
   if (!jobId) {
     return Response.json({ error: "Missing job_id" }, { status: 400 });
   }
+
+  const tier: Tier = isTier(body.tier) ? body.tier : "single";
+  const priceUsd = TIER_PRICES[tier];
+  const priceCents = priceUsd * 100;
 
   const [job] = await db.select().from(jobs).where(eq(jobs.id, jobId));
   if (!job) {
@@ -42,14 +53,15 @@ export default async (req: Request, _context: Context) => {
     .insert(checkoutSessions)
     .values({
       jobId,
+      tier,
       status: "pending",
     })
     .returning();
 
   const intent = await stripe.paymentIntents.create({
-    amount: PRICE_CENTS,
+    amount: priceCents,
     currency: "usd",
-    metadata: { session_id: session.id, job_id: jobId },
+    metadata: { session_id: session.id, job_id: jobId, tier },
     automatic_payment_methods: { enabled: true },
   });
 
@@ -60,7 +72,7 @@ export default async (req: Request, _context: Context) => {
 
   if (lnAddress) {
     try {
-      const sats = await usdToSats(PRICE_USD);
+      const sats = await usdToSats(priceUsd);
       const inv = await fetchLnurlInvoice(lnAddress, sats);
       lnInvoice = inv.pr;
       lnAmountSats = sats;
@@ -82,6 +94,8 @@ export default async (req: Request, _context: Context) => {
 
   return Response.json({
     session_id: session.id,
+    tier,
+    price_usd: priceUsd,
     stripe_client_secret: intent.client_secret,
     stripe_publishable_key: Netlify.env.get("STRIPE_PUBLISHABLE_KEY") ?? null,
     ln_invoice: lnInvoice,

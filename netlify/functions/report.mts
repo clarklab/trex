@@ -21,6 +21,7 @@ export default async (req: Request, _context: Context) => {
   }
 
   let isPaid = false;
+  let tier: "single" | "panel" | null = null;
   if (token) {
     const sessionId = verifyToken(token);
     if (sessionId) {
@@ -34,12 +35,13 @@ export default async (req: Request, _context: Context) => {
         session.jobId === job.id
       ) {
         isPaid = true;
+        tier = (session.tier as "single" | "panel") || "single";
       }
     }
   }
 
   if (format === "pdf") {
-    if (!isPaid) {
+    if (!isPaid || tier !== "single") {
       return new Response("Forbidden", { status: 403 });
     }
     if (!job.reportBlobKey) {
@@ -65,15 +67,16 @@ export default async (req: Request, _context: Context) => {
   const response: Record<string, unknown> = {
     job_id: job.id,
     status: job.status,
+    paid: isPaid,
+    tier,
     stage1: {
       status: job.stage1Status,
       result: job.stage1Result,
       error: job.stage1Error,
     },
-    paid: isPaid,
   };
 
-  if (isPaid) {
+  if (isPaid && tier === "single") {
     response.stage2 = {
       status: job.stage2Status,
       result: job.stage2Result,
@@ -84,6 +87,35 @@ export default async (req: Request, _context: Context) => {
     response.stage2 = {
       status: job.stage2Status,
       ready: job.stage2Status === "complete",
+    };
+  }
+
+  if (isPaid && tier === "panel") {
+    response.panel = {
+      claude: {
+        status: job.panelClaudeStatus,
+        result: job.panelClaudeResult,
+        error: job.panelClaudeError,
+        model: "claude-opus-4-7",
+      },
+      gpt: {
+        status: job.panelGptStatus,
+        result: job.panelGptResult,
+        error: job.panelGptError,
+        model: "gpt-5.5-pro",
+      },
+      gemini: {
+        status: job.panelGeminiStatus,
+        result: job.panelGeminiResult,
+        error: job.panelGeminiError,
+        model: "gemini-2.5-pro",
+      },
+    };
+  } else {
+    response.panel = {
+      claude: { status: job.panelClaudeStatus },
+      gpt: { status: job.panelGptStatus },
+      gemini: { status: job.panelGeminiStatus },
     };
   }
 

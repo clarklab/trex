@@ -87,12 +87,6 @@ export default async (req: Request, _context: Context) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ job_id }),
     }).catch(() => {});
-
-    fetch(`${siteUrl}/.netlify/functions/deep-scan-background`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ job_id }),
-    }).catch(() => {});
   }
 
   return Response.json({ job_id, status: "processing" });

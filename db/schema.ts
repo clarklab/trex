@@ -17,6 +17,18 @@ export const jobs = pgTable("jobs", {
   stage2Error: text("stage2_error"),
   reportBlobKey: text("report_blob_key"),
 
+  panelClaudeStatus: text("panel_claude_status").notNull().default("pending"),
+  panelClaudeResult: jsonb("panel_claude_result"),
+  panelClaudeError: text("panel_claude_error"),
+
+  panelGptStatus: text("panel_gpt_status").notNull().default("pending"),
+  panelGptResult: jsonb("panel_gpt_result"),
+  panelGptError: text("panel_gpt_error"),
+
+  panelGeminiStatus: text("panel_gemini_status").notNull().default("pending"),
+  panelGeminiResult: jsonb("panel_gemini_result"),
+  panelGeminiError: text("panel_gemini_error"),
+
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -24,6 +36,8 @@ export const jobs = pgTable("jobs", {
 export const checkoutSessions = pgTable("checkout_sessions", {
   id: uuid("id").defaultRandom().primaryKey(),
   jobId: uuid("job_id").notNull().references(() => jobs.id),
+
+  tier: text("tier").notNull().default("single"),
 
   status: text("status").notNull().default("pending"),
   method: text("method"),

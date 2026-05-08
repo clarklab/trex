@@ -3,6 +3,7 @@ import { db } from "../../db/index.js";
 import { checkoutSessions } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 import { signToken } from "../lib/token.js";
+import { fanOutForTier, type Tier } from "../lib/fanout.js";
 
 export default async (req: Request, _context: Context) => {
   const url = new URL(req.url);
@@ -24,6 +25,7 @@ export default async (req: Request, _context: Context) => {
     return Response.json({
       status: "paid",
       method: session.method,
+      tier: session.tier,
       job_id: session.jobId,
       download_token: signToken(sessionId),
     });
@@ -43,9 +45,13 @@ export default async (req: Request, _context: Context) => {
               paidAt: new Date(),
             })
             .where(eq(checkoutSessions.id, sessionId));
+
+          fanOutForTier(session.tier as Tier, session.jobId);
+
           return Response.json({
             status: "paid",
             method: "lightning",
+            tier: session.tier,
             job_id: session.jobId,
             download_token: signToken(sessionId),
           });

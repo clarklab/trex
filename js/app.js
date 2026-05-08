@@ -8,11 +8,14 @@ const state = {
   jobId: null,
   pickedFile: null,
   paid: false,
+  paidTier: null,
   downloadToken: null,
   stage1: null,
   stage2: null,
   stage1Status: "pending",
   stage2Status: "pending",
+  panelStatus: { claude: "pending", gpt: "pending", gemini: "pending" },
+  panelResults: { claude: null, gpt: null, gemini: null },
   stopJobPoll: null,
 };
 
@@ -78,9 +81,22 @@ function setupButtons() {
   });
   $("reset-file-btn").addEventListener("click", resetAll);
   $("reset-btn").addEventListener("click", resetAll);
-  $("unlock-btn").addEventListener("click", () => {
-    openCheckout(state.jobId, onPaid, (err) => {
-      console.error(err);
+  $("unlock-single-btn").addEventListener("click", () => {
+    openCheckout(state.jobId, "single", onPaid, (err) => console.error(err));
+  });
+  $("unlock-panel-btn").addEventListener("click", () => {
+    openCheckout(state.jobId, "panel", onPaid, (err) => console.error(err));
+  });
+
+  document.querySelectorAll(".panel-tab").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const which = btn.dataset.panel;
+      document.querySelectorAll(".panel-tab").forEach((b) => {
+        b.classList.toggle("active", b === btn);
+      });
+      document.querySelectorAll(".panel-pane").forEach((p) => {
+        p.hidden = p.dataset.pane !== which;
+      });
     });
   });
 }
@@ -116,11 +132,16 @@ function resetAll() {
   });
   $("file-input").value = "";
   $("full-report").hidden = true;
+  $("panel-report").hidden = true;
   $("recovery-note").hidden = true;
+  $("panel-recovery-note").hidden = true;
   $("download-pdf").hidden = true;
-  $("unlock-btn").hidden = true;
+  $("unlock-single-btn").hidden = true;
+  $("unlock-panel-btn").hidden = true;
   $("stage2-running").hidden = true;
   $("stage2-error").hidden = true;
+  state.panelStatus = { claude: "pending", gpt: "pending", gemini: "pending" };
+  state.panelResults = { claude: null, gpt: null, gemini: null };
   history.replaceState({}, "", "/");
   setStage("idle");
 }
@@ -155,8 +176,12 @@ function startJobPolling() {
       const s2 = data.stage2?.status || "pending";
       state.stage1Status = s1;
       state.stage2Status = s2;
+      state.panelStatus = {
+        claude: data.panel?.claude?.status || "pending",
+        gpt: data.panel?.gpt?.status || "pending",
+        gemini: data.panel?.gemini?.status || "pending",
+      };
 
-      // step 2: stage1 quick scan
       if (s1 === "running") {
         setStepState(1, "active");
         if (currentProgress() < 45) setProgress(45);
@@ -165,11 +190,16 @@ function startJobPolling() {
         setStepState(1, "done");
         if (!state.stage1) {
           state.stage1 = data.stage1.result;
-          setStepState(2, "active");
-          if (currentProgress() < 60) setProgress(60);
-          // once stage1 is done, transition to results showing free preview
+          setStepState(2, "done");
+          setStepState(3, "done");
+          setProgress(100);
           renderFreePreview(state.stage1);
           setStage("results");
+
+          if (!state.paid) {
+            $("unlock-single-btn").hidden = false;
+            $("unlock-panel-btn").hidden = false;
+          }
         }
       }
       if (s1 === "error" && !state.stage1) {
@@ -179,29 +209,36 @@ function startJobPolling() {
         return;
       }
 
-      // step 3+4: stage2 deep scan
-      if (s2 === "running") {
-        setStepState(2, "active");
-        if (currentProgress() < 75) setProgress(75);
-        $("stage2-running").hidden = false;
-      }
-      if (s2 === "complete") {
-        setStepState(2, "done");
-        setStepState(3, "done");
-        setProgress(100);
-        $("stage2-running").hidden = true;
-        if (!state.paid) {
-          $("unlock-btn").hidden = false;
-        } else {
+      if (state.paid && state.paidTier === "single") {
+        if (s2 === "complete" && !state.stage2) {
           loadFullReport();
         }
+        if (s2 === "error") {
+          $("stage2-running").hidden = true;
+          const errEl = $("stage2-error");
+          errEl.textContent =
+            "Deep analysis could not be completed. Refresh to retry, or contact support.";
+          errEl.hidden = false;
+        }
       }
-      if (s2 === "error") {
-        $("stage2-running").hidden = true;
-        const errEl = $("stage2-error");
-        errEl.textContent =
-          "Full analysis could not be completed. Your quick summary is still available.";
-        errEl.hidden = false;
+
+      if (state.paid && state.paidTier === "panel") {
+        updatePanelTabStates();
+        const allDone = ["claude", "gpt", "gemini"].every(
+          (k) =>
+            state.panelStatus[k] === "complete" ||
+            state.panelStatus[k] === "error",
+        );
+        if (
+          state.panelStatus.claude === "complete" ||
+          state.panelStatus.gpt === "complete" ||
+          state.panelStatus.gemini === "complete"
+        ) {
+          loadPanelReport();
+        }
+        if (allDone && state.stopJobPoll) {
+          state.stopJobPoll();
+        }
       }
     },
     (err) => {
@@ -211,6 +248,23 @@ function startJobPolling() {
       errEl.hidden = false;
     },
   );
+}
+
+function updatePanelTabStates() {
+  ["claude", "gpt", "gemini"].forEach((k) => {
+    const stateEl = document.querySelector(`[data-tab-state="${k}"]`);
+    if (!stateEl) return;
+    const status = state.panelStatus[k];
+    stateEl.className = `panel-tab-state ${status}`;
+    stateEl.textContent =
+      status === "complete"
+        ? "Done"
+        : status === "running"
+          ? "Reviewing…"
+          : status === "error"
+            ? "Failed"
+            : "Queued";
+  });
 }
 
 function setStepState(idx, status) {
@@ -330,16 +384,122 @@ function renderFreePreview(s1) {
 
 function onPaid(data) {
   state.paid = true;
+  state.paidTier = data.tier || "single";
   state.downloadToken = data.download_token;
-  $("unlock-btn").hidden = true;
+  $("unlock-single-btn").hidden = true;
+  $("unlock-panel-btn").hidden = true;
 
-  if (state.stage2Status === "complete") {
-    loadFullReport();
+  if (state.paidTier === "panel") {
+    $("panel-report").hidden = false;
+    updatePanelTabStates();
+    if (!state.stopJobPoll) startJobPolling();
   } else {
-    $("stage2-running").hidden = false;
-    $("stage2-running").textContent =
-      "Payment confirmed. Full report is still being generated…";
+    if (state.stage2Status === "complete") {
+      loadFullReport();
+    } else {
+      $("stage2-running").hidden = false;
+      $("stage2-running").textContent =
+        "Payment confirmed. Full report is still being generated…";
+      if (!state.stopJobPoll) startJobPolling();
+    }
   }
+}
+
+async function loadPanelReport() {
+  if (!state.downloadToken || !state.jobId) return;
+  try {
+    const res = await fetch(
+      `/api/report?id=${encodeURIComponent(state.jobId)}&token=${encodeURIComponent(state.downloadToken)}`,
+    );
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.panel) return;
+
+    ["claude", "gpt", "gemini"].forEach((k) => {
+      const result = data.panel[k]?.result;
+      const status = data.panel[k]?.status;
+      state.panelStatus[k] = status;
+      if (result && !state.panelResults[k]) {
+        state.panelResults[k] = result;
+        renderPanelPane(k, result);
+      }
+    });
+    updatePanelTabStates();
+
+    const allDone = ["claude", "gpt", "gemini"].every(
+      (k) =>
+        state.panelStatus[k] === "complete" ||
+        state.panelStatus[k] === "error",
+    );
+    if (allDone) {
+      setupPanelRecoveryUrl();
+      if (state.stopJobPoll) state.stopJobPoll();
+    }
+  } catch (err) {
+    console.error("loadPanelReport:", err);
+  }
+}
+
+function renderPanelPane(which, result) {
+  const pane = document.querySelector(`.panel-pane[data-pane="${which}"]`);
+  if (!pane) return;
+  const loading = pane.querySelector(".panel-pane-loading");
+  const content = pane.querySelector(".panel-pane-content");
+  if (loading) loading.hidden = true;
+  if (!content) return;
+  content.innerHTML = renderReportHtml(result);
+  content.hidden = false;
+}
+
+function renderReportHtml(r) {
+  if (!r) return "";
+  const summary = escapeHtml(r.summary || "");
+  const mods = (r.modifications || [])
+    .map((m) => {
+      const risk = (m.risk || "low").toLowerCase();
+      const escClause = escapeHtml(m.clause || "");
+      const escStd = escapeHtml(m.standard_text || "");
+      const escContract = escapeHtml(m.contract_text || "");
+      const escExplain = escapeHtml(m.explanation || "");
+      const questions = (m.questions || []).length
+        ? `<div class="mod-questions"><strong>Questions to ask:</strong><ul>${(m.questions || [])
+            .map((q) => `<li>${escapeHtml(q)}</li>`)
+            .join("")}</ul></div>`
+        : "";
+      return `
+        <div class="mod">
+          <div class="mod-header">
+            <span class="risk-badge risk-${escapeAttr(risk)}">${escapeHtml(risk)}</span>
+            <span class="mod-clause">${escClause}</span>
+          </div>
+          <div class="mod-text-block"><span class="label">Standard form</span>${escStd}</div>
+          <div class="mod-text-block"><span class="label">This contract</span>${escContract}</div>
+          <p class="summary">${escExplain}</p>
+          ${questions}
+        </div>`;
+    })
+    .join("");
+  const terms = Object.entries(r.full_terms || {})
+    .map(
+      ([k, v]) =>
+        `<tr><td>${escapeHtml(k)}</td><td>${escapeHtml(v == null ? "—" : String(v))}</td></tr>`,
+    )
+    .join("");
+  return `
+    <h3>Summary</h3>
+    <p>${summary}</p>
+    <h3>Modifications</h3>
+    ${mods || '<p style="color:var(--muted);font-size:14px">No modifications detected.</p>'}
+    <h3>Full Terms</h3>
+    <table>${terms}</table>
+  `;
+}
+
+function setupPanelRecoveryUrl() {
+  const url = `${window.location.origin}/?job=${encodeURIComponent(state.jobId)}&token=${encodeURIComponent(state.downloadToken)}`;
+  $("panel-recovery-url").textContent = url;
+  $("panel-recovery-note").hidden = false;
+  history.replaceState({}, "", `/?job=${state.jobId}&token=${state.downloadToken}`);
 }
 
 async function loadFullReport() {
@@ -450,23 +610,41 @@ async function checkRecoveryUrl() {
     state.jobId = job;
     state.downloadToken = token;
     state.paid = true;
+    state.paidTier = data.tier || "single";
     state.stage1 = data.stage1?.result;
-    state.stage2 = data.stage2?.result;
     state.stage1Status = data.stage1?.status;
     state.stage2Status = data.stage2?.status;
 
     if (state.stage1) {
       renderFreePreview(state.stage1);
       setStage("results");
-      $("unlock-btn").hidden = true;
+      $("unlock-single-btn").hidden = true;
+      $("unlock-panel-btn").hidden = true;
     }
-    if (state.stage2) {
-      renderFullReport(state.stage2);
-      $("full-report").hidden = false;
-      $("download-pdf").hidden = false;
-      $("download-pdf").href =
-        `/api/report?id=${encodeURIComponent(job)}&token=${encodeURIComponent(token)}&format=pdf`;
-      setupRecoveryUrl();
+
+    if (state.paidTier === "panel" && data.panel) {
+      $("panel-report").hidden = false;
+      ["claude", "gpt", "gemini"].forEach((k) => {
+        const result = data.panel[k]?.result;
+        const status = data.panel[k]?.status;
+        state.panelStatus[k] = status;
+        if (result) {
+          state.panelResults[k] = result;
+          renderPanelPane(k, result);
+        }
+      });
+      updatePanelTabStates();
+      setupPanelRecoveryUrl();
+    } else if (state.paidTier === "single") {
+      state.stage2 = data.stage2?.result;
+      if (state.stage2) {
+        renderFullReport(state.stage2);
+        $("full-report").hidden = false;
+        $("download-pdf").hidden = false;
+        $("download-pdf").href =
+          `/api/report?id=${encodeURIComponent(job)}&token=${encodeURIComponent(token)}&format=pdf`;
+        setupRecoveryUrl();
+      }
     }
   } catch (err) {
     console.warn("recovery check failed:", err);

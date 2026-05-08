@@ -7,7 +7,7 @@ let elements = null;
 let session = null;
 let stopPolling = null;
 
-export async function openCheckout(jobId, onPaid, onError) {
+export async function openCheckout(jobId, tier, onPaid, onError) {
   resetState();
   const dialog = document.getElementById("checkout-dialog");
 
@@ -15,7 +15,7 @@ export async function openCheckout(jobId, onPaid, onError) {
     const res = await fetch("/api/checkout-init", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ job_id: jobId }),
+      body: JSON.stringify({ job_id: jobId, tier }),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -25,6 +25,20 @@ export async function openCheckout(jobId, onPaid, onError) {
   } catch (err) {
     onError(err);
     return;
+  }
+
+  const titleEl = document.querySelector("#checkout-dialog h2");
+  const subEl = document.querySelector("#checkout-dialog .dialog-sub");
+  if (tier === "panel") {
+    if (titleEl) titleEl.textContent = "Unlock panel review";
+    if (subEl) subEl.textContent = "$12.00 USD — three frontier AIs review your contract.";
+    const payBtn = document.getElementById("pay-card");
+    if (payBtn) payBtn.textContent = "Pay $12";
+  } else {
+    if (titleEl) titleEl.textContent = "Unlock full report";
+    if (subEl) subEl.textContent = "$5.00 USD — one-time, no account.";
+    const payBtn = document.getElementById("pay-card");
+    if (payBtn) payBtn.textContent = "Pay $5";
   }
 
   if (!session.stripe_publishable_key) {
@@ -78,7 +92,7 @@ export async function openCheckout(jobId, onPaid, onError) {
   setupTabs();
 
   if (session.ln_available) {
-    setupLightning(onPaid, onError);
+    setupLightning(onPaid, onError, tier);
   }
 
   document.querySelectorAll("[data-close]").forEach((b) => {
@@ -104,10 +118,11 @@ function setupTabs() {
   });
 }
 
-function setupLightning(onPaid, onError) {
+function setupLightning(onPaid, onError, tier) {
   const sats = session.ln_amount_sats;
+  const usd = session.price_usd ?? (tier === "panel" ? 12 : 5);
   document.getElementById("ln-amount").textContent =
-    `${sats.toLocaleString()} sats (~$5.00)`;
+    `${sats.toLocaleString()} sats (~$${usd.toFixed(2)})`;
   document.getElementById("ln-link").href =
     `lightning:${session.ln_invoice}`;
 

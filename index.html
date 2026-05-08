@@ -48,8 +48,14 @@
             Drop a Texas Real Estate Commission contract — One to Four Family,
             Farm &amp; Ranch, Condo, New Home, or any standard addendum. Trex
             flags risky clauses, missed deadlines, and seller traps in plain
-            English. ~30 seconds. No login.
+            English.
           </p>
+          <ul class="micro-features" aria-label="Quick facts">
+            <li><span class="msym">bolt</span>30 secs</li>
+            <li><span class="msym">visibility</span>Easy to read</li>
+            <li><span class="msym">play_arrow</span>Start free</li>
+            <li><span class="msym">description</span>$5 final report</li>
+          </ul>
         </div>
       </section>
 
@@ -110,9 +116,11 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
               >
-                <path d="M13 2 4 14h7l-1 8 9-12h-7z" />
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+                <circle cx="12" cy="12" r="3" />
+                <line x1="3" y1="3" x2="21" y2="21" />
               </svg>
-              Reviewed in ~30s
+              No human eyeballs
             </span>
             <span>
               <svg
@@ -125,10 +133,12 @@
                 stroke-linecap="round"
                 stroke-linejoin="round"
               >
-                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
-                <circle cx="12" cy="12" r="3" />
+                <ellipse cx="12" cy="5" rx="9" ry="3" />
+                <path d="M3 5v14a9 3 0 0 0 18 0V5" />
+                <path d="M3 12a9 3 0 0 0 18 0" />
+                <line x1="3" y1="3" x2="21" y2="21" />
               </svg>
-              Never shared
+              No data stored or sold
             </span>
           </div>
           <p id="drop-error" class="error-msg" hidden></p>
@@ -344,8 +354,13 @@
                   </svg>
                   Review another
                 </button>
-                <button id="unlock-btn" class="btn unlock" hidden>
-                  Unlock full report — $5
+                <button id="unlock-single-btn" class="btn unlock" hidden>
+                  Unlock review — $5
+                </button>
+                <button id="unlock-panel-btn" class="btn panel" hidden>
+                  <span class="msym" aria-hidden="true">groups</span>
+                  Panel review — $12
+                  <span class="badge-mini">3 frontier AIs</span>
                 </button>
                 <a
                   id="download-pdf"
@@ -375,7 +390,7 @@
           </div>
         </div>
 
-        <!-- FULL REPORT (after payment) -->
+        <!-- FULL REPORT (after payment, single tier) -->
         <section
           id="full-report"
           class="full-report-section fade-in"
@@ -394,6 +409,57 @@
             <strong>Bookmark this URL.</strong> There are no accounts —
             if you close this tab without bookmarking, you'll lose access.
             <code id="recovery-url"></code>
+          </div>
+        </section>
+
+        <!-- PANEL REPORT (after payment, panel tier) -->
+        <section
+          id="panel-report"
+          class="full-report-section fade-in"
+          hidden
+        >
+          <div class="panel-header">
+            <div>
+              <div class="kicker">Panel review</div>
+              <h3 style="margin: 4px 0 0; font-size: 16px; text-transform: none; letter-spacing: -0.01em; color: var(--slate)">
+                Three frontier AIs reviewed this contract
+              </h3>
+            </div>
+            <div class="panel-status" id="panel-status-summary"></div>
+          </div>
+
+          <div class="panel-tabs" id="panel-tabs">
+            <button class="panel-tab active" data-panel="claude">
+              <span class="panel-tab-name">Claude Opus 4.7</span>
+              <span class="panel-tab-state" data-tab-state="claude">Loading…</span>
+            </button>
+            <button class="panel-tab" data-panel="gpt">
+              <span class="panel-tab-name">GPT-5.5 Pro</span>
+              <span class="panel-tab-state" data-tab-state="gpt">Loading…</span>
+            </button>
+            <button class="panel-tab" data-panel="gemini">
+              <span class="panel-tab-name">Gemini 2.5 Pro</span>
+              <span class="panel-tab-state" data-tab-state="gemini">Loading…</span>
+            </button>
+          </div>
+
+          <div class="panel-pane" data-pane="claude">
+            <div class="panel-pane-loading">Claude is still drafting its review…</div>
+            <div class="panel-pane-content" hidden></div>
+          </div>
+          <div class="panel-pane" data-pane="gpt" hidden>
+            <div class="panel-pane-loading">GPT-5.5 Pro is still drafting its review…</div>
+            <div class="panel-pane-content" hidden></div>
+          </div>
+          <div class="panel-pane" data-pane="gemini" hidden>
+            <div class="panel-pane-loading">Gemini 2.5 Pro is still drafting its review…</div>
+            <div class="panel-pane-content" hidden></div>
+          </div>
+
+          <div id="panel-recovery-note" class="recovery-note" hidden>
+            <strong>Bookmark this URL.</strong> There are no accounts —
+            if you close this tab without bookmarking, you'll lose access.
+            <code id="panel-recovery-url"></code>
           </div>
         </section>
       </div>

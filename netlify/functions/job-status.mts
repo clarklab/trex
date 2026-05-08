@@ -25,9 +25,13 @@ export default async (req: Request, _context: Context) => {
     },
     stage2: {
       status: job.stage2Status,
-      result: null,
-      error: job.stage2Error,
       ready: job.stage2Status === "complete",
+      error: job.stage2Error,
+    },
+    panel: {
+      claude: { status: job.panelClaudeStatus, error: job.panelClaudeError },
+      gpt: { status: job.panelGptStatus, error: job.panelGptError },
+      gemini: { status: job.panelGeminiStatus, error: job.panelGeminiError },
     },
   });
 };

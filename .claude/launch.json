@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "netlify",
+      "runtimeExecutable": "/Users/clark/.nvm/versions/node/v22.22.2/bin/node",
+      "runtimeArgs": [
+        "/Users/clark/.nvm/versions/node/v22.22.2/lib/node_modules/netlify-cli/bin/run.js",
+        "dev",
+        "--offline",
+        "--port",
+        "8888"
+      ],
+      "port": 8888
+    }
+  ]
+}
