@@ -58,10 +58,23 @@ Field rules:
 - **severity_high / severity_medium**: integer counts of issues at each severity level. Used to render badges like "1 high · 2 medium".
 - **red_flags**: array of 1-5 objects, each {title, severity}. Severity is "high", "medium", or "low". Titles are 5-10 words.
 - **terms**: each entry is {value, note, warning}.
-  - "value": the headline number/string for that field (e.g. "$485,000", "Buyer pays", "5 days"). Null if the field is genuinely blank.
-  - "note": a short caption shown smaller below the value. Should reference the paragraph or section number where you found it (e.g. "Paragraph 3 · §3", "1.0% of price · §5A"). For derived metrics like "52 days from effective" or "80% LTV", include those. Null if no useful caption.
+  - "value": THE headline number/string for that field, **kept short — ideally ≤16 characters and always one line**. Examples: "$485,000", "Buyer pays", "5 days", "Conventional". Null if the field is genuinely blank.
+  - "note": a short caption shown smaller below the value. THIS is where secondary detail goes — addendum reference, percent, paragraph number, derived metrics like "80% LTV", "52 days from effective", "Within 7 days after GD cure", etc. Always include the paragraph/section reference here (e.g. "Paragraph 3 · §3", "1.0% of price · §5A"). Null if no useful caption.
   - "warning": short orange-pill text if something looks off about that field (e.g. "Below market: median is $500 / 10 days", "Includes non-standard language", "Blank — should be filled"). Null if nothing to flag.
-- For TREC 20-18, common paragraph references: §3 sales price, §5 earnest money/option fee, §6 title/survey, §9 closing, §11 special provisions, §22 addenda. Reference the actual paragraph the value comes from.
+
+**Per-field guidance for value vs. note (keep value short, push detail into note):**
+- sales_price: value="$355,000" · note="$70,000 cash + $285,000 financed · §3"
+- earnest_money: value="$5,000" · note="1.0% of sales price · §5A"
+- option_fee_period: value="$300 · 7 days" · note="Option Fee §5A; Option Period §5B"
+- title_notice_period: value="5 days" · note="Standard · §6D"
+- closing_date: value="Jun 28, 2026" · note="52 days from effective · §9"
+- financing: value="Conventional" · note="$285,000 · 80% LTV · §40-11 Third Party Financing Addendum"
+- survey: value="Buyer pays" or "New survey" · note="§6C(2) · within 10 days of effective"
+- special_provisions: value="Custom language" or "2 lines added" · note="§22 · review recommended"
+
+If a value is blank (field not filled in the contract), set value=null and put any context in the note (e.g. "Should be filled before signing · §3").
+
+For TREC 20-18, common paragraph references: §3 sales price, §5 earnest money/option fee, §6 title/survey, §9 closing, §11 special provisions, §22 addenda. Reference the actual paragraph the value comes from.
 
 Calibration for warnings:
 - Option period under 5 days: warn "Unusually short option period"

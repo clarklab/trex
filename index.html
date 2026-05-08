@@ -294,7 +294,10 @@
           <div class="rich-card">
             <header class="rich-head">
               <div>
-                <div class="rich-eyebrow">QUICK SCAN (FREE)</div>
+                <div class="rich-eyebrow">
+                  Quick scan
+                  <span class="free-pill">Free</span>
+                </div>
                 <h2 class="rich-headline">Here's what's inside your contract…</h2>
               </div>
               <div class="tier-pill-row">
@@ -393,38 +396,6 @@
               class="rich-foot-note error"
               hidden
             ></p>
-
-            <div class="rich-foot-row">
-              <p class="rich-foot-disclaim">
-                Heads up — T-REX is a guide, not legal advice. For high-stakes
-                deals, loop in a lawyer.
-              </p>
-              <div class="rich-foot-actions">
-                <button id="reset-btn" class="btn ghost-light">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
-                    <path d="M21 3v5h-5" />
-                    <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
-                    <path d="M3 21v-5h5" />
-                  </svg>
-                  Review another
-                </button>
-                <a
-                  id="download-pdf"
-                  class="btn primary"
-                  hidden
-                  target="_blank"
-                  rel="noopener"
-                >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 4v12" />
-                    <path d="M7 11l5 5 5-5" />
-                    <path d="M4 20h16" />
-                  </svg>
-                  Download PDF
-                </a>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -434,6 +405,16 @@
           class="full-report-section fade-in"
           hidden
         >
+          <div class="full-report-actions">
+            <a id="download-pdf" class="btn primary" hidden target="_blank" rel="noopener">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 4v12" />
+                <path d="M7 11l5 5 5-5" />
+                <path d="M4 20h16" />
+              </svg>
+              Download PDF
+            </a>
+          </div>
           <h3>Summary</h3>
           <p id="report-summary"></p>
 

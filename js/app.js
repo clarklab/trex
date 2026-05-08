@@ -115,7 +115,9 @@ function setupButtons() {
     if (state.pickedFile) startAnalysis(state.pickedFile);
   });
   $("reset-file-btn").addEventListener("click", resetAll);
-  $("reset-btn").addEventListener("click", resetAll);
+  // #reset-btn was removed from the rich card per design; keep guarded
+  // in case it returns or other surfaces reuse the id.
+  $("reset-btn")?.addEventListener("click", resetAll);
   $("unlock-single-btn").addEventListener("click", () => {
     openCheckout(state.jobId, "single", onPaid, (err) => console.error(err));
   });
@@ -468,7 +470,7 @@ function renderFreePreview(s1) {
       if (medium) sevParts.push(`${medium} medium`);
       badges.insertAdjacentHTML(
         "beforeend",
-        `<span class="badge warn"><span class="pip"></span>${escapeHtml(sevParts.join(" · "))}</span>`,
+        `<span class="badge warn"><span class="msym">priority_high</span>${escapeHtml(sevParts.join(" · "))}</span>`,
       );
     }
     const status = s1?.status || "reviewable";
@@ -479,9 +481,11 @@ function renderFreePreview(s1) {
           ? "Needs attention"
           : "Hard to read";
     const statusClass = status === "reviewable" ? "ok" : "warn";
+    const statusIcon =
+      status === "reviewable" ? "check_circle" : "warning";
     badges.insertAdjacentHTML(
       "beforeend",
-      `<span class="badge ${statusClass}"><span class="pip"></span>${escapeHtml(statusLabel)}</span>`,
+      `<span class="badge ${statusClass}"><span class="msym">${statusIcon}</span>${escapeHtml(statusLabel)}</span>`,
     );
   }
 
@@ -539,7 +543,7 @@ function renderTermCell(label, term) {
   if (warning) {
     const warnEl = document.createElement("div");
     warnEl.className = "term-warning";
-    warnEl.innerHTML = `<span class="ic" aria-hidden="true">!</span><span>${escapeHtml(warning)}</span>`;
+    warnEl.innerHTML = `<span class="msym" aria-hidden="true">warning</span><span>${escapeHtml(warning)}</span>`;
     cell.appendChild(warnEl);
   }
 
