@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Privacy — Trex</title>
+    <meta
+      name="description"
+      content="How Trex handles your contracts. Short version: we don't keep them, we don't sell them, no human reads them."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@8..36,400;8..36,500;8..36,600;8..36,700&family=JetBrains+Mono:wght@400;500&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <nav class="nav">
+        <a href="/" class="brand" style="text-decoration: none">
+          <div class="mark" role="img" aria-label="Trex"></div>
+          <span>Trex</span>
+        </a>
+        <div class="nav-links">
+          <a href="/#how">How it works</a>
+          <a href="/#forms">Forms</a>
+          <a href="/#faq">FAQ</a>
+        </div>
+      </nav>
+
+      <article class="prose">
+        <h1 class="page-title">Privacy</h1>
+        <p class="page-sub">
+          The short version: we don't keep your contracts, we don't sell anything,
+          and no human reads what you upload.
+        </p>
+
+        <h2>What you upload</h2>
+        <p>
+          When you drop a TREC contract on the home page, the PDF is sent over
+          HTTPS to our server, processed by AI, and used only to produce the
+          review you see on screen. We do not share the file with anyone and we
+          don't use it to train any model.
+        </p>
+
+        <h2>How long we keep it</h2>
+        <p>
+          Your uploaded PDF and the generated report are deleted within 24 hours.
+          If you pay to unlock the full review, the recovery URL stays valid for
+          the same 24-hour window — bookmark it if you want to come back.
+        </p>
+
+        <h2>What we collect about you</h2>
+        <ul>
+          <li>
+            Standard server logs (IP, user agent, timestamp). Used for debugging
+            and abuse prevention. Rotated regularly.
+          </li>
+          <li>
+            If you pay: Stripe handles the card details directly. We never see or
+            store your card number. Stripe holds the transaction record per their
+            own retention rules.
+          </li>
+          <li>
+            If you pay with Lightning: nothing identifying — just an invoice
+            payment hash.
+          </li>
+        </ul>
+
+        <h2>What we don't do</h2>
+        <ul>
+          <li>No accounts, no login, no password to lose.</li>
+          <li>No marketing emails. We don't have your address.</li>
+          <li>No analytics that track you across sites.</li>
+          <li>No selling or sharing of your contract content. Ever.</li>
+        </ul>
+
+        <h2>Cookies</h2>
+        <p>
+          The site uses a single short-lived session cookie if you start a
+          checkout. No third-party tracking cookies.
+        </p>
+
+        <h2>Questions or takedowns</h2>
+        <p>
+          If you uploaded something by mistake or want it deleted before the
+          24-hour window expires, reach us at
+          <a href="/contact">/contact</a>.
+        </p>
+
+        <p class="last-updated">Last updated 2026-05-08.</p>
+      </article>
+
+      <footer>
+        <div>© 2026 Trex Labs · Not a law firm</div>
+        <div>
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
+          <a href="/contact">Contact</a>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

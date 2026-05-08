@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Contact — Trex</title>
+    <meta
+      name="description"
+      content="Questions, takedowns, or feedback for Trex? Drop us a message."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@8..36,400;8..36,500;8..36,600;8..36,700&family=JetBrains+Mono:wght@400;500&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <nav class="nav">
+        <a href="/" class="brand" style="text-decoration: none">
+          <div class="mark" role="img" aria-label="Trex"></div>
+          <span>Trex</span>
+        </a>
+        <div class="nav-links">
+          <a href="/#how">How it works</a>
+          <a href="/#forms">Forms</a>
+          <a href="/#faq">FAQ</a>
+        </div>
+      </nav>
+
+      <article class="prose">
+        <h1 class="page-title">Contact</h1>
+        <p class="page-sub">
+          Bug, takedown, refund, partnership idea, or just hello — drop us a
+          line. We answer within a couple of business days.
+        </p>
+
+        <form
+          id="contact-form"
+          class="contact-form"
+          name="contact"
+          method="POST"
+          data-netlify="true"
+          netlify-honeypot="bot-field"
+          action="/contact?success=1"
+        >
+          <input type="hidden" name="form-name" value="contact" />
+          <p class="honeypot">
+            <label>Don't fill this out: <input name="bot-field" /></label>
+          </p>
+
+          <div class="field">
+            <label for="contact-name">Your name</label>
+            <input id="contact-name" name="name" type="text" required autocomplete="name" />
+          </div>
+
+          <div class="field">
+            <label for="contact-email">Email</label>
+            <input
+              id="contact-email"
+              name="email"
+              type="email"
+              required
+              autocomplete="email"
+            />
+          </div>
+
+          <div class="field">
+            <label for="contact-message">Message</label>
+            <textarea
+              id="contact-message"
+              name="message"
+              required
+              placeholder="What can we help with?"
+            ></textarea>
+          </div>
+
+          <p id="contact-error" class="form-error" hidden></p>
+
+          <div class="submit-row">
+            <button type="submit" class="submit-btn" id="contact-submit">
+              Send message
+            </button>
+            <span
+              id="contact-spinner"
+              class="spinner"
+              style="display: none; margin: 0"
+              aria-hidden="true"
+            ></span>
+          </div>
+        </form>
+
+        <div id="contact-success" class="form-success" hidden>
+          <div class="icon" aria-hidden="true">
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M5 12l5 5 9-11" />
+            </svg>
+          </div>
+          <h2>Thanks — message received.</h2>
+          <p>
+            We got your note and will be in contact soon. No need to refresh.
+          </p>
+          <a href="/" class="home-link">
+            Back to home
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M5 12h14" />
+              <path d="M13 6l6 6-6 6" />
+            </svg>
+          </a>
+        </div>
+      </article>
+
+      <footer>
+        <div>© 2026 Trex Labs · Not a law firm</div>
+        <div>
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
+          <a href="/contact">Contact</a>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      (function () {
+        const form = document.getElementById("contact-form");
+        const success = document.getElementById("contact-success");
+        const errEl = document.getElementById("contact-error");
+        const submitBtn = document.getElementById("contact-submit");
+        const spinner = document.getElementById("contact-spinner");
+
+        // If the user came back via ?success=1 (e.g. JS disabled fallback), show
+        // the success state directly.
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("success") === "1") {
+          form.hidden = true;
+          success.hidden = false;
+          history.replaceState({}, "", "/contact");
+        }
+
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          errEl.hidden = true;
+
+          if (form.querySelector('[name="bot-field"]').value) {
+            return; // honeypot caught it
+          }
+
+          submitBtn.disabled = true;
+          spinner.style.display = "inline-block";
+
+          try {
+            const data = new FormData(form);
+            const body = new URLSearchParams(data).toString();
+            const res = await fetch("/", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+              body,
+            });
+            if (!res.ok && res.status !== 200) {
+              throw new Error(`Server returned ${res.status}`);
+            }
+
+            form.style.transition = "opacity .25s ease";
+            form.style.opacity = "0";
+            await new Promise((r) => setTimeout(r, 260));
+            form.hidden = true;
+            form.style.opacity = "1";
+            success.hidden = false;
+            success.classList.add("fade-in");
+          } catch (err) {
+            errEl.textContent =
+              "Could not send message. Try again, or email us if it keeps failing.";
+            errEl.hidden = false;
+            console.error("contact submit failed:", err);
+          } finally {
+            submitBtn.disabled = false;
+            spinner.style.display = "none";
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>
