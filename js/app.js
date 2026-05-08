@@ -60,12 +60,14 @@ function setupDropZone() {
     idle.addEventListener(ev, (e) => {
       e.preventDefault();
       idle.classList.add("dragover");
+      setMascotRawr(true);
     });
   });
   ["dragleave", "drop"].forEach((ev) => {
     idle.addEventListener(ev, (e) => {
       e.preventDefault();
       idle.classList.remove("dragover");
+      if (ev === "dragleave") setMascotRawr(false);
     });
   });
   idle.addEventListener("drop", (e) => {
@@ -73,6 +75,38 @@ function setupDropZone() {
     const file = e.dataTransfer?.files?.[0];
     if (file) handleFilePick(file);
   });
+}
+
+function setMascotRawr(on) {
+  const mark = document.querySelector(".brand .mark");
+  if (!mark) return;
+  mark.classList.remove("rawring");
+  if (on) {
+    mark.classList.remove("rawr");
+    void mark.offsetWidth;
+    mark.classList.add("rawr");
+  } else {
+    mark.classList.remove("rawr");
+  }
+}
+
+function setMascotRawring(on) {
+  const mark = document.querySelector(".brand .mark");
+  if (!mark) return;
+  mark.classList.remove("rawr");
+  if (on) {
+    mark.classList.add("rawring");
+  } else {
+    mark.classList.remove("rawring");
+  }
+}
+
+function flashMascotRawr(durationMs = 700) {
+  setMascotRawr(true);
+  setTimeout(() => {
+    const mark = document.querySelector(".brand .mark");
+    if (mark) mark.classList.remove("rawr");
+  }, durationMs);
 }
 
 function setupButtons() {
@@ -114,6 +148,7 @@ function handleFilePick(file) {
   state.pickedFile = file;
   $("file-name").textContent = file.name;
   $("file-stats").textContent = `${formatSize(file.size)} · ready to review`;
+  flashMascotRawr();
   setStage("file");
 }
 
@@ -142,6 +177,7 @@ function resetAll() {
   $("stage2-error").hidden = true;
   state.panelStatus = { claude: "pending", gpt: "pending", gemini: "pending" };
   state.panelResults = { claude: null, gpt: null, gemini: null };
+  setMascotRawring(false);
   history.replaceState({}, "", "/");
   setStage("idle");
 }
@@ -151,6 +187,7 @@ async function startAnalysis(file) {
   setStepState(0, "active");
   setProgress(5);
   setStage("analyzing");
+  setMascotRawring(true);
 
   try {
     const result = await uploadFile(file, (done, total) => {
@@ -195,6 +232,7 @@ function startJobPolling() {
           setProgress(100);
           renderFreePreview(state.stage1);
           setStage("results");
+          setMascotRawring(false);
 
           if (!state.paid) {
             $("unlock-single-btn").hidden = false;
@@ -204,6 +242,7 @@ function startJobPolling() {
       }
       if (s1 === "error" && !state.stage1) {
         setStage("idle");
+        setMascotRawring(false);
         showError("Analysis failed. Please try re-uploading your contract.");
         if (state.stopJobPoll) state.stopJobPoll();
         return;

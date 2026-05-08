@@ -50,9 +50,40 @@ body {
   font-weight: 600; letter-spacing: -0.02em; font-size: 18px; color: var(--slate);
 }
 .brand .mark {
-  width: 26px; height: 26px; border-radius: 8px; background: var(--blue);
-  display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 13px;
-  letter-spacing: 0;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 3px solid var(--blue);
+  background: #fff url('/assets/avatar-default.png') no-repeat center / cover;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  transition: transform .15s ease;
+}
+.brand .mark::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: url('/assets/avatar-rawr.png') no-repeat center / cover;
+  opacity: 0;
+  transition: opacity .12s ease;
+}
+.brand:hover .mark::before,
+.brand .mark.rawr::before,
+.brand .mark.rawring::before { opacity: 1; }
+.brand:hover .mark,
+.brand .mark.rawr { animation: rawr-pop .55s cubic-bezier(.36,1.5,.55,1) both; }
+.brand .mark.rawring { animation: rawr-wiggle 1.4s ease-in-out infinite; }
+@keyframes rawr-pop {
+  0%   { transform: scale(1) rotate(0); }
+  18%  { transform: scale(1.22) rotate(-7deg); }
+  35%  { transform: scale(1.18) rotate(6deg); }
+  52%  { transform: scale(1.15) rotate(-4deg); }
+  70%  { transform: scale(1.12) rotate(2deg); }
+  100% { transform: scale(1.08) rotate(0); }
+}
+@keyframes rawr-wiggle {
+  0%, 100% { transform: scale(1.06) rotate(0); }
+  25%      { transform: scale(1.10) rotate(-4deg); }
+  75%      { transform: scale(1.10) rotate(4deg); }
 }
 .nav-links {
   display: flex; align-items: center; gap: 28px;
