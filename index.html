@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TREC Contract Red Flag Scanner</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>TREC Contract Red Flag Scanner</h1>
+        <p class="tagline">
+          Drag a TREC contract PDF. Get a free summary and red-flag check in
+          under a minute. Unlock the full report for $5.
+        </p>
+      </header>
+
+      <section id="drop-section">
+        <div id="drop-zone">
+          <div class="drop-prompt">
+            <p class="drop-headline">Drop your TREC contract PDF here</p>
+            <p class="drop-sub">or click to browse · max 10 MB</p>
+          </div>
+          <input type="file" id="file-input" accept="application/pdf" hidden />
+        </div>
+        <p id="drop-error" class="error" hidden></p>
+      </section>
+
+      <section id="upload-section" hidden>
+        <p id="upload-status">Preparing upload...</p>
+        <div class="progress">
+          <div id="upload-bar" class="progress-bar"></div>
+        </div>
+      </section>
+
+      <section id="scanning-section" hidden>
+        <div class="spinner"></div>
+        <p id="scan-status">Analyzing your contract...</p>
+      </section>
+
+      <section id="preview-section" hidden>
+        <h2>Free preview</h2>
+        <div class="preview-card">
+          <div id="preview-form" class="preview-row"></div>
+          <div id="preview-mods" class="preview-row"></div>
+          <div class="preview-row">
+            <h3>Top red flags</h3>
+            <ul id="preview-flags"></ul>
+          </div>
+          <div class="preview-row">
+            <h3>Basic terms</h3>
+            <table id="preview-terms"></table>
+          </div>
+        </div>
+
+        <div id="stage2-progress" class="stage2-progress" hidden>
+          <span class="dot"></span>
+          <span>Full analysis in progress...</span>
+        </div>
+        <div id="stage2-error" class="error" hidden></div>
+
+        <button id="unlock-btn" class="primary" hidden>
+          Unlock full report &mdash; $5
+        </button>
+      </section>
+
+      <section id="paid-progress-section" hidden>
+        <p class="paid-progress-note">
+          Payment confirmed. Your full report is still being generated...
+        </p>
+        <div class="spinner"></div>
+      </section>
+
+      <section id="report-section" hidden>
+        <h2>Full Report</h2>
+        <div class="report-actions">
+          <a id="download-pdf" class="primary" target="_blank" rel="noopener">
+            Download PDF
+          </a>
+        </div>
+        <div id="recovery-note" class="recovery-note" hidden>
+          <p>
+            <strong>Bookmark this URL.</strong> There are no accounts &mdash; if
+            you close this tab without bookmarking, you'll lose access.
+          </p>
+          <code id="recovery-url"></code>
+        </div>
+        <div class="report-body">
+          <h3>Summary</h3>
+          <p id="report-summary"></p>
+
+          <h3>Modifications</h3>
+          <div id="report-mods"></div>
+
+          <h3>Full Terms</h3>
+          <table id="report-terms"></table>
+        </div>
+      </section>
+
+      <dialog id="checkout-dialog">
+        <button class="close" aria-label="Close" data-close>&times;</button>
+        <h2>Unlock full report</h2>
+        <p class="dialog-sub">$5.00 USD &mdash; one-time, no account.</p>
+
+        <div class="tabs">
+          <button data-tab="card" class="tab active">Card</button>
+          <button data-tab="lightning" class="tab" id="ln-tab" hidden>
+            &#9889; Lightning
+          </button>
+        </div>
+
+        <div id="card-pane" class="pane">
+          <div id="payment-element"></div>
+          <button id="pay-card" class="primary" disabled>Pay $5</button>
+          <p id="card-error" class="error" hidden></p>
+        </div>
+
+        <div id="ln-pane" class="pane" hidden>
+          <canvas id="qr"></canvas>
+          <p id="ln-amount" class="ln-amount"></p>
+          <div class="ln-actions">
+            <button id="copy-invoice">Copy invoice</button>
+            <a id="ln-link" href="#">Open in wallet</a>
+          </div>
+          <p id="ln-status" class="ln-status">Waiting for payment...</p>
+          <button id="refresh-invoice" class="secondary" hidden>
+            Refresh invoice
+          </button>
+        </div>
+      </dialog>
+
+      <footer>
+        <p class="disclaimer">
+          This tool provides automated analysis of TREC contract forms and is
+          NOT legal advice. It is not a substitute for review by a licensed
+          Texas real estate attorney. No attorney-client relationship is
+          created by using this tool. Contracts are not stored beyond the
+          active session and are deleted within 24 hours. This tool covers
+          Texas TREC forms only.
+        </p>
+      </footer>
+    </main>
+
+    <script type="module" src="/js/app.js"></script>
+  </body>
+</html>

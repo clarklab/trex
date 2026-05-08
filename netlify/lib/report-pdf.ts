@@ -1,0 +1,119 @@
+import PDFDocument from "pdfkit";
+
+export interface Modification {
+  clause: string;
+  standard_text: string;
+  contract_text: string;
+  explanation: string;
+  risk: "low" | "medium" | "high";
+  questions: string[];
+}
+
+export interface Stage2Result {
+  form_id: string;
+  form_name: string;
+  modifications: Modification[];
+  full_terms: Record<string, string | number | null>;
+  summary: string;
+}
+
+export async function generateReportPdf(
+  stage1: Record<string, unknown> | null,
+  stage2: Stage2Result,
+): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument({ size: "LETTER", margin: 50 });
+      const chunks: Buffer[] = [];
+      doc.on("data", (c) => chunks.push(c as Buffer));
+      doc.on("end", () => resolve(Buffer.concat(chunks)));
+      doc.on("error", reject);
+
+      doc.fontSize(20).text("TREC Contract Red Flag Report", { align: "left" });
+      doc.moveDown(0.5);
+      doc.fontSize(10).fillColor("#666").text(
+        `Generated ${new Date().toLocaleString()}`,
+      );
+      doc.fillColor("black");
+      doc.moveDown();
+
+      doc.fontSize(14).text(stage2.form_name || "Unknown form");
+      doc.fontSize(10).fillColor("#666").text(`Form ID: ${stage2.form_id || "n/a"}`);
+      doc.fillColor("black");
+      doc.moveDown();
+
+      doc.fontSize(12).text("Summary", { underline: true });
+      doc.fontSize(10).text(stage2.summary || "");
+      doc.moveDown();
+
+      doc.fontSize(12).text("Modifications Found", { underline: true });
+      doc.moveDown(0.3);
+      const mods = stage2.modifications || [];
+      if (mods.length === 0) {
+        doc.fontSize(10).text("No modifications detected vs. standard form.");
+      } else {
+        for (const m of mods) {
+          doc.fontSize(11).fillColor(riskColor(m.risk)).text(
+            `[${(m.risk || "low").toUpperCase()}] ${m.clause}`,
+          );
+          doc.fillColor("black");
+          doc.fontSize(9);
+          doc.text("Standard:", { continued: true }).fillColor("#444").text(
+            ` ${truncate(m.standard_text, 500)}`,
+          );
+          doc.fillColor("black");
+          doc.text("Contract:", { continued: true }).fillColor("#444").text(
+            ` ${truncate(m.contract_text, 500)}`,
+          );
+          doc.fillColor("black").moveDown(0.3);
+          doc.fontSize(10).text(m.explanation || "");
+          if (m.questions && m.questions.length > 0) {
+            doc.moveDown(0.2);
+            doc.fontSize(9).fillColor("#444").text("Questions to ask:");
+            for (const q of m.questions) {
+              doc.text(`  - ${q}`);
+            }
+            doc.fillColor("black");
+          }
+          doc.moveDown(0.5);
+        }
+      }
+
+      doc.moveDown();
+      doc.fontSize(12).text("Full Terms Summary", { underline: true });
+      doc.moveDown(0.3);
+      doc.fontSize(10);
+      const terms = stage2.full_terms || {};
+      for (const [k, v] of Object.entries(terms)) {
+        doc.text(`${k}: `, { continued: true }).fillColor("#444").text(
+          v === null || v === undefined ? "(not specified)" : String(v),
+        );
+        doc.fillColor("black");
+      }
+
+      doc.moveDown(2);
+      doc.fontSize(8).fillColor("#888").text(
+        "DISCLAIMER: This report provides automated analysis of TREC contract forms and is NOT legal advice. " +
+          "It is not a substitute for review by a licensed Texas real estate attorney. No attorney-client relationship " +
+          "is created by use of this tool.",
+        { align: "left" },
+      );
+
+      doc.end();
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+function riskColor(risk: string): string {
+  if (risk === "high") return "#c0392b";
+  if (risk === "medium") return "#d68910";
+  return "#1e8449";
+}
+
+function truncate(s: string | undefined, max: number): string {
+  if (!s) return "";
+  if (s.length <= max) return s;
+  return s.slice(0, max) + "...";
+}
