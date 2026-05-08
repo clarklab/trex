@@ -80,7 +80,7 @@ body {
   width: 40px; height: 40px;
   border-radius: 50%;
   border: 2px solid var(--blue);
-  background: color-mix(in srgb, var(--blue) 15%, white) url('/assets/avatar-default.png') no-repeat center / 78%;
+  background: #fff url('/assets/avatar-default.png') no-repeat center / 78%;
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
@@ -92,6 +92,16 @@ body {
   background: url('/assets/avatar-rawr.png') no-repeat center / 78%;
   opacity: 0;
   transition: opacity .12s ease;
+  z-index: 1;
+}
+.brand .mark::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: var(--blue);
+  opacity: 0.15;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 2;
 }
 .brand:hover .mark::before,
 .brand .mark.rawr::before,
@@ -250,6 +260,14 @@ h1 em { font-style: normal; color: var(--blue); }
   width: 0%;
 }
 .steps { margin-top: 18px; display: flex; flex-direction: column; gap: 10px; }
+.server-status {
+  margin: 14px 0 0;
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 11px;
+  color: var(--muted);
+  word-break: break-all;
+}
+.server-status:empty { display: none; }
 .step { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--muted); }
 .step.done { color: var(--slate); }
 .step.active { color: var(--slate); }
@@ -617,8 +635,18 @@ footer a:hover { color: var(--slate); }
 .chat-fab .fab-avatar {
   width: 100%; height: 100%;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--blue) 15%, white) url('/assets/avatar-default.png') no-repeat center / 86%;
+  background: #fff url('/assets/avatar-default.png') no-repeat center / 86%;
   transition: background-image .15s ease;
+  position: relative;
+  overflow: hidden;
+}
+.chat-fab .fab-avatar::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: var(--blue);
+  opacity: 0.15;
+  pointer-events: none;
+  border-radius: inherit;
 }
 .chat-fab:hover .fab-avatar {
   background-image: url('/assets/avatar-rawr.png');
@@ -700,9 +728,20 @@ footer a:hover { color: var(--slate); }
 .chat-header .avatar {
   width: 38px; height: 38px;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  background: color-mix(in srgb, var(--blue) 15%, white) url('/assets/avatar-cool.png') no-repeat center / 78%;
+  border: 2px solid var(--blue);
+  background: #fff url('/assets/avatar-cool.png') no-repeat center / 78%;
   flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+.chat-header .avatar::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: var(--blue);
+  opacity: 0.15;
+  pointer-events: none;
+  border-radius: inherit;
 }
 .chat-header .name { font-size: 15px; font-weight: 600; line-height: 1.2; }
 .chat-header .status {

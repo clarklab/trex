@@ -207,6 +207,11 @@ async function startAnalysis(file) {
 }
 
 function startJobPolling() {
+  const pollStart = Date.now();
+  let stage1RunningSince = null;
+  const STAGE1_PENDING_TIMEOUT_MS = 90_000;
+  const STAGE1_RUNNING_TIMEOUT_MS = 180_000;
+
   state.stopJobPoll = pollJobStatus(
     state.jobId,
     (data) => {
@@ -219,6 +224,43 @@ function startJobPolling() {
         gpt: data.panel?.gpt?.status || "pending",
         gemini: data.panel?.gemini?.status || "pending",
       };
+
+      // Surface server-side state on the analyzing screen so the user
+      // sees something is (or isn't) happening.
+      const status = $("server-status");
+      if (status) {
+        if (s1 === "pending") status.textContent = `Job ${state.jobId} · waiting for scan to start…`;
+        else if (s1 === "running") status.textContent = `Job ${state.jobId} · Haiku is reading the PDF…`;
+        else if (s1 === "complete") status.textContent = `Job ${state.jobId} · scan complete`;
+        else if (s1 === "error") status.textContent = `Job ${state.jobId} · ${data.stage1?.error || "scan failed"}`;
+      }
+
+      // Stuck-state timeouts — fire only while we're still waiting on stage1.
+      if (!state.stage1) {
+        if (s1 === "running" && !stage1RunningSince) stage1RunningSince = Date.now();
+        const pendingFor = Date.now() - pollStart;
+        const runningFor = stage1RunningSince ? Date.now() - stage1RunningSince : 0;
+        if (s1 === "pending" && pendingFor > STAGE1_PENDING_TIMEOUT_MS) {
+          if (state.stopJobPoll) state.stopJobPoll();
+          setStage("idle");
+          setMascotRawring(false);
+          showError(
+            `Quick scan never started. Job ${state.jobId}. ` +
+              `Likely the background function failed to fire — check Netlify function logs.`,
+          );
+          return;
+        }
+        if (s1 === "running" && runningFor > STAGE1_RUNNING_TIMEOUT_MS) {
+          if (state.stopJobPoll) state.stopJobPoll();
+          setStage("idle");
+          setMascotRawring(false);
+          showError(
+            `Quick scan stuck mid-run. Job ${state.jobId}. ` +
+              `PDF parse or AI call may have hung — check Netlify function logs.`,
+          );
+          return;
+        }
+      }
 
       if (s1 === "running") {
         setStepState(1, "active");
@@ -244,7 +286,10 @@ function startJobPolling() {
       if (s1 === "error" && !state.stage1) {
         setStage("idle");
         setMascotRawring(false);
-        showError("Analysis failed. Please try re-uploading your contract.");
+        const errMsg = data.stage1?.error
+          ? `Analysis failed: ${data.stage1.error} (Job ${state.jobId})`
+          : `Analysis failed (Job ${state.jobId}). Please try re-uploading your contract.`;
+        showError(errMsg);
         if (state.stopJobPoll) state.stopJobPoll();
         return;
       }
