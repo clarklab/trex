@@ -283,6 +283,15 @@ function startJobPolling() {
     },
     (err) => {
       console.error(err);
+      // If we never got stage1 results, surface the error in the drop
+      // section instead of leaving the user staring at a stalled
+      // progress bar.
+      if (!state.stage1) {
+        setStage("idle");
+        setMascotRawring(false);
+        showError(err.message || "Polling failed. Please try again.");
+        return;
+      }
       const errEl = $("stage2-error");
       errEl.textContent = err.message || "Polling failed.";
       errEl.hidden = false;

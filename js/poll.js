@@ -5,6 +5,8 @@ const MAX_POLL_MS = 10 * 60 * 1000;
 export function pollJobStatus(jobId, onUpdate, onError) {
   const start = Date.now();
   let stopped = false;
+  let consecutiveErrors = 0;
+  const MAX_CONSECUTIVE_ERRORS = 4;
 
   const tick = async () => {
     if (stopped) return;
@@ -19,6 +21,7 @@ export function pollJobStatus(jobId, onUpdate, onError) {
         throw new Error(err.error || `status ${res.status}`);
       }
       const data = await res.json();
+      consecutiveErrors = 0;
       onUpdate(data);
       if (
         data.stage1?.status === "complete" &&
@@ -32,7 +35,13 @@ export function pollJobStatus(jobId, onUpdate, onError) {
         return;
       }
     } catch (err) {
-      console.warn("poll error:", err);
+      consecutiveErrors++;
+      console.warn(`poll error (${consecutiveErrors}/${MAX_CONSECUTIVE_ERRORS}):`, err);
+      if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+        stopped = true;
+        onError(new Error(`Couldn't reach the analyzer (${err.message}). Try refreshing.`));
+        return;
+      }
     }
     setTimeout(tick, 3000);
   };
