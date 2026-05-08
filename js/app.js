@@ -122,6 +122,17 @@ function setupButtons() {
   $("unlock-panel-btn").addEventListener("click", () => {
     openCheckout(state.jobId, "panel", onPaid, (err) => console.error(err));
   });
+  // Locked feature CTAs and the agent-cta strip both delegate to the
+  // openCheckout flow with the tier baked into data-tier.
+  document
+    .querySelectorAll(".locked-cta, .agent-cta-btn")
+    .forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (!state.jobId) return;
+        const tier = btn.dataset.tier === "panel" ? "panel" : "single";
+        openCheckout(state.jobId, tier, onPaid, (err) => console.error(err));
+      });
+    });
 
   document.querySelectorAll(".panel-tab").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -172,10 +183,13 @@ function resetAll() {
   $("recovery-note").hidden = true;
   $("panel-recovery-note").hidden = true;
   $("download-pdf").hidden = true;
-  $("unlock-single-btn").hidden = true;
-  $("unlock-panel-btn").hidden = true;
+  $("unlock-single-btn").hidden = false;
+  $("unlock-panel-btn").hidden = false;
   $("stage2-running").hidden = true;
   $("stage2-error").hidden = true;
+  document.querySelectorAll(".locked-row, .agent-cta").forEach((el) => {
+    el.hidden = false;
+  });
   state.panelStatus = { claude: "pending", gpt: "pending", gemini: "pending" };
   state.panelResults = { claude: null, gpt: null, gemini: null };
   setMascotRawring(false);
@@ -398,82 +412,118 @@ function checkSvg() {
   return '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-11"/></svg>';
 }
 
+const TERM_ORDER = [
+  ["sales_price", "Sales Price"],
+  ["earnest_money", "Earnest Money"],
+  ["option_fee_period", "Option Fee / Period"],
+  ["title_notice_period", "Title Notice Period"],
+  ["closing_date", "Closing Date"],
+  ["financing", "Financing"],
+  ["survey", "Survey"],
+  ["special_provisions", "Special Provisions"],
+];
+
 function renderFreePreview(s1) {
+  // doc title + sub
+  const address = s1?.property_address;
   const file = state.pickedFile;
-  if (file) {
-    $("results-file-name").textContent = file.name;
-    $("results-file-stats").textContent =
-      `${formatSize(file.size)} · ${s1?.form_id || "TREC"} · reviewed just now`;
-  } else {
-    $("results-file-name").textContent =
-      `${s1?.form_id || "TREC"} contract`;
-    $("results-file-stats").textContent = `${s1?.form_name || ""}`;
+  const titleEl = $("results-doc-title");
+  const subEl = $("results-doc-sub");
+  if (titleEl) {
+    titleEl.textContent =
+      address ||
+      (file ? file.name : `${s1?.form_id || "TREC"} contract`);
+  }
+  if (subEl) {
+    const formId = s1?.form_id || "TREC";
+    const formName = s1?.form_name || "Unknown form";
+    const pages = s1?.page_count
+      ? `${s1.page_count} page${s1.page_count === 1 ? "" : "s"}`
+      : "";
+    const parts = [
+      formId !== "unknown" ? `TREC ${formId}` : "Unidentified TREC form",
+      formName !== "Unknown form" ? formName : null,
+      pages || null,
+    ].filter(Boolean);
+    subEl.textContent = parts.join(" · ");
   }
 
-  const flagCount = s1?.red_flags?.length || 0;
-  const modCount = s1?.modification_count ?? 0;
+  // badges
   const badges = $("results-badges");
-  badges.innerHTML = "";
-  if (flagCount > 0) {
-    badges.innerHTML += `<span class="badge warn"><span class="pip"></span>${flagCount} flagged</span>`;
+  if (badges) {
+    badges.innerHTML = "";
+    const high = s1?.severity_high ?? 0;
+    const medium = s1?.severity_medium ?? 0;
+    if (high + medium > 0) {
+      const sevParts = [];
+      if (high) sevParts.push(`${high} high`);
+      if (medium) sevParts.push(`${medium} medium`);
+      badges.insertAdjacentHTML(
+        "beforeend",
+        `<span class="badge warn"><span class="pip"></span>${escapeHtml(sevParts.join(" · "))}</span>`,
+      );
+    }
+    const status = s1?.status || "reviewable";
+    const statusLabel =
+      status === "reviewable"
+        ? "Reviewable"
+        : status === "needs_attention"
+          ? "Needs attention"
+          : "Hard to read";
+    const statusClass = status === "reviewable" ? "ok" : "warn";
+    badges.insertAdjacentHTML(
+      "beforeend",
+      `<span class="badge ${statusClass}"><span class="pip"></span>${escapeHtml(statusLabel)}</span>`,
+    );
   }
-  badges.innerHTML += `<span class="badge ok"><span class="pip"></span>${modCount} modifications</span>`;
 
-  const formName = s1?.form_name || "Unknown form";
-  const conf = s1?.confidence ?? "?";
-  $("result-form").innerHTML =
-    `Detected as <b>${escapeHtml(formName)}</b> (${escapeHtml(String(conf))}% confidence). ` +
-    `T-REX compared this contract against the published TREC standard form and found ` +
-    `<b>${modCount} modifications</b>.`;
+  // 4×2 terms grid
+  const grid = $("terms-grid");
+  if (grid) {
+    grid.innerHTML = "";
+    const terms = s1?.terms || {};
+    for (const [key, label] of TERM_ORDER) {
+      const t = terms[key];
+      grid.appendChild(renderTermCell(label, t));
+    }
+  }
+}
 
-  if (flagCount > 0) {
-    $("result-mods").innerHTML =
-      `${flagCount} ${flagCount === 1 ? "issue" : "issues"} worth a closer ` +
-      `look — listed on the right. Unlock the full report to see the standard form text, ` +
-      `risk ratings, and suggested questions.`;
+function renderTermCell(label, term) {
+  const cell = document.createElement("div");
+  cell.className = "term";
+
+  const labelEl = document.createElement("div");
+  labelEl.className = "term-label";
+  labelEl.textContent = label;
+  cell.appendChild(labelEl);
+
+  const value = term?.value;
+  const valueEl = document.createElement("div");
+  if (value) {
+    valueEl.className = "term-value";
+    valueEl.textContent = value;
   } else {
-    $("result-mods").innerHTML =
-      `No major red flags surfaced in the quick scan. Unlock the full report ` +
-      `for a clause-by-clause breakdown.`;
+    valueEl.className = "term-value empty";
+    valueEl.textContent = "—";
+  }
+  cell.appendChild(valueEl);
+
+  if (term?.note) {
+    const noteEl = document.createElement("div");
+    noteEl.className = "term-note";
+    noteEl.textContent = term.note;
+    cell.appendChild(noteEl);
   }
 
-  const t = s1?.terms || {};
-  const parts = [];
-  if (t.price) parts.push(`Price: <b>${escapeHtml(t.price)}</b>`);
-  if (t.option_period_days != null)
-    parts.push(`Option period: <b>${escapeHtml(String(t.option_period_days))} days</b>`);
-  if (t.closing_date) parts.push(`Closing: <b>${escapeHtml(t.closing_date)}</b>`);
-  if (t.financing_type) parts.push(`Financing: <b>${escapeHtml(t.financing_type)}</b>`);
-  if (t.buyer) parts.push(`Buyer: <b>${escapeHtml(t.buyer)}</b>`);
-  if (t.seller) parts.push(`Seller: <b>${escapeHtml(t.seller)}</b>`);
-  $("result-terms").innerHTML = parts.length
-    ? parts.join(" &nbsp;·&nbsp; ")
-    : '<span style="color:var(--muted)">No basic terms extracted.</span>';
-
-  const issuesEl = $("issues");
-  issuesEl.innerHTML = "";
-  $("issue-count").textContent = flagCount ? `(${flagCount})` : "";
-  const flags = s1?.red_flags || [];
-  if (flags.length === 0) {
-    issuesEl.innerHTML =
-      '<p class="summary" style="color:var(--muted);font-size:13px;margin:0">No red flags surfaced.</p>';
-  } else {
-    flags.forEach((flag, i) => {
-      const sev = i === 0 ? "high" : i === 1 ? "med" : "low";
-      const el = document.createElement("div");
-      el.className = `issue ${sev}`;
-      el.innerHTML = `
-        <div class="sev"></div>
-        <div class="issue-body">
-          <div class="issue-top">
-            <p class="issue-title">${escapeHtml(flag)}</p>
-            <span class="issue-loc">${sev.toUpperCase()}</span>
-          </div>
-          <p class="issue-desc">Unlock the full report for the standard form text, plain-English explanation, and suggested questions to ask.</p>
-        </div>`;
-      issuesEl.appendChild(el);
-    });
+  if (term?.warning) {
+    const warnEl = document.createElement("div");
+    warnEl.className = "term-warning";
+    warnEl.innerHTML = `<span class="ic" aria-hidden="true">!</span><span>${escapeHtml(term.warning)}</span>`;
+    cell.appendChild(warnEl);
   }
+
+  return cell;
 }
 
 function onPaid(data) {
@@ -482,6 +532,9 @@ function onPaid(data) {
   state.downloadToken = data.download_token;
   $("unlock-single-btn").hidden = true;
   $("unlock-panel-btn").hidden = true;
+  document.querySelectorAll(".locked-row, .agent-cta").forEach((el) => {
+    el.hidden = true;
+  });
 
   if (state.paidTier === "panel") {
     $("panel-report").hidden = false;

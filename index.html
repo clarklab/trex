@@ -287,108 +287,127 @@
         <!-- RESULTS -->
         <div
           id="drop-results"
-          class="drop fade-in"
+          class="drop drop-results-rich fade-in"
           data-state="results"
           hidden
         >
-          <div class="results">
-            <div class="results-head">
-              <div class="left">
+          <div class="rich-card">
+            <header class="rich-head">
+              <div>
+                <div class="rich-eyebrow">QUICK SCAN (FREE)</div>
+                <h2 class="rich-headline">Here's what's inside your contract…</h2>
+              </div>
+              <div class="tier-pill-row">
+                <button class="tier-pill active" id="unlock-single-btn">$5 · Full Report</button>
+                <button class="tier-pill" id="unlock-panel-btn">$12 · 3x Agent Panel</button>
+              </div>
+            </header>
+
+            <div class="doc-card">
+              <div class="doc-row">
                 <div class="doc-icon">
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.6"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path
-                      d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"
-                    />
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
                     <path d="M14 3v5h5" />
                     <path d="M9 13h6M9 17h4" />
                   </svg>
                 </div>
                 <div class="doc-meta">
-                  <div id="results-file-name" class="doc-name"></div>
-                  <div id="results-file-stats" class="doc-stats"></div>
+                  <div id="results-doc-title" class="doc-title"></div>
+                  <div id="results-doc-sub" class="doc-sub"></div>
                 </div>
+                <div class="doc-badges" id="results-badges"></div>
               </div>
-              <div
-                id="results-badges"
-                style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap"
-              ></div>
+
+              <div class="terms-grid" id="terms-grid"></div>
             </div>
 
-            <div class="results-body">
-              <div class="col">
-                <h4>Plain-language summary</h4>
-                <p id="result-form" class="summary"></p>
-                <p id="result-mods" class="summary"></p>
-                <h4 style="margin-top: 24px">Key terms</h4>
-                <p id="result-terms" class="summary" style="margin: 0"></p>
-              </div>
-
-              <div class="col">
-                <h4>
-                  Issues
-                  <span
-                    id="issue-count"
-                    style="color: #9aa3b2; font-weight: 500; margin-left: 6px"
-                  ></span>
-                </h4>
-                <div id="issues" class="issues"></div>
-                <p
-                  id="stage2-running"
-                  class="summary"
-                  style="margin-top: 14px; font-size: 13px; color: var(--muted)"
-                  hidden
-                >
-                  Full clause-by-clause analysis still running…
+            <div class="locked-row">
+              <div class="locked-card">
+                <span class="locked-pill">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="11" width="16" height="10" rx="2"/>
+                    <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+                  </svg>
+                  Locked
+                </span>
+                <div class="locked-label">ESTIMATED MONTHLY PAYMENT</div>
+                <p class="locked-desc">
+                  Principal, interest, taxes &amp; insurance projected from
+                  financing terms in §4.
                 </p>
-                <p
-                  id="stage2-error"
-                  class="summary"
-                  style="margin-top: 14px; font-size: 13px; color: #b33b1f"
-                  hidden
-                ></p>
+                <button class="locked-cta" data-tier="panel">
+                  Unlock in Agent Panel
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14"/><path d="M13 6l6 6-6 6"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="locked-card">
+                <span class="locked-pill">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="11" width="16" height="10" rx="2"/>
+                    <path d="M8 11V8a4 4 0 0 1 8 0v3"/>
+                  </svg>
+                  Locked
+                </span>
+                <div class="locked-label">VISUAL COMPARISON</div>
+                <p class="locked-desc">
+                  Side-by-side chart of sale price vs. recent closed comps
+                  within 0.5 mi.
+                </p>
+                <button class="locked-cta" data-tier="panel">
+                  Unlock in Agent Panel
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14"/><path d="M13 6l6 6-6 6"/>
+                  </svg>
+                </button>
               </div>
             </div>
 
-            <div class="actions">
-              <div style="font-size: 12px; color: var(--muted); max-width: 420px">
+            <div class="agent-cta">
+              <p>
+                <strong>Built for buyer's agents.</strong> Agent Panel adds
+                monthly-payment math, comparable sales charts, and a
+                redline-ready Word export — across every contract you scan.
+              </p>
+              <div class="agent-cta-btns">
+                <button class="agent-cta-btn" data-tier="single">
+                  $5 · Full Report
+                </button>
+                <button class="agent-cta-btn primary" data-tier="panel">
+                  Agent Panel · $12
+                </button>
+              </div>
+            </div>
+
+            <p
+              id="stage2-running"
+              class="rich-foot-note"
+              hidden
+            >
+              Full clause-by-clause analysis still running…
+            </p>
+            <p
+              id="stage2-error"
+              class="rich-foot-note error"
+              hidden
+            ></p>
+
+            <div class="rich-foot-row">
+              <p class="rich-foot-disclaim">
                 Heads up — T-REX is a guide, not legal advice. For high-stakes
                 deals, loop in a lawyer.
-              </div>
-              <div style="display: flex; gap: 8px; flex-wrap: wrap">
-                <button id="reset-btn" class="btn">
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.7"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
+              </p>
+              <div class="rich-foot-actions">
+                <button id="reset-btn" class="btn ghost-light">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
                     <path d="M21 3v5h-5" />
                     <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
                     <path d="M3 21v-5h5" />
                   </svg>
                   Review another
-                </button>
-                <button id="unlock-single-btn" class="btn unlock" hidden>
-                  Unlock review — $5
-                </button>
-                <button id="unlock-panel-btn" class="btn panel" hidden>
-                  <span class="msym" aria-hidden="true">groups</span>
-                  Panel review — $12
-                  <span class="badge-mini">3 frontier AIs</span>
                 </button>
                 <a
                   id="download-pdf"
@@ -397,16 +416,7 @@
                   target="_blank"
                   rel="noopener"
                 >
-                  <svg
-                    width="15"
-                    height="15"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.7"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 4v12" />
                     <path d="M7 11l5 5 5-5" />
                     <path d="M4 20h16" />
