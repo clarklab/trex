@@ -17,6 +17,29 @@
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
+
+/* Cross-document view transitions (Chromium 126+; gracefully ignored
+   elsewhere). Pairs with site.js for a CSS-only fallback fade on
+   browsers that don't support cross-doc transitions yet. */
+@view-transition { navigation: auto; }
+::view-transition-old(root) {
+  animation: trex-page-out .22s cubic-bezier(.4, 0, .2, 1) both;
+}
+::view-transition-new(root) {
+  animation: trex-page-in .26s cubic-bezier(.2, 0, 0, 1) both;
+}
+@keyframes trex-page-out {
+  to { opacity: 0; transform: translate3d(0, -8px, 0); }
+}
+@keyframes trex-page-in {
+  from { opacity: 0; transform: translate3d(0, 12px, 0); }
+}
+/* Fallback fade for browsers without cross-doc transitions */
+html.nav-fading body {
+  opacity: 0;
+  transform: translate3d(0, -6px, 0);
+  transition: opacity .14s ease, transform .14s ease;
+}
 body {
   font-family: 'Google Sans Flex', 'Google Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
   color: var(--slate);
@@ -409,18 +432,13 @@ h1 em { font-style: normal; color: var(--blue); }
 @media (max-width: 980px) { .farm { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 520px) { .farm { grid-template-columns: 1fr; } }
 .form-card {
-  background: var(--white); padding: 22px 22px 24px;
+  background: var(--white); padding: 22px 22px 22px;
   display: flex; flex-direction: column; gap: 8px;
-  text-decoration: none; color: inherit;
-  transition: background .14s;
-}
-.form-card:hover { background: #FCFDFF; }
-.form-card .num-pill-row {
-  display: flex; align-items: center; gap: 6px;
-  align-self: flex-start; flex-wrap: wrap;
+  color: inherit;
 }
 .form-card .num-pill {
   display: inline-flex; align-items: center; gap: 6px;
+  align-self: flex-start;
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px; color: var(--blue); background: var(--blue-50);
   padding: 3px 8px; border-radius: 6px;
@@ -432,11 +450,23 @@ h1 em { font-style: normal; color: var(--blue); }
   text-transform: uppercase;
   color: #B33B1F; background: #FFF1EC;
   padding: 3px 8px; border-radius: 6px;
+  flex-shrink: 0;
 }
 .form-card.soon h3,
 .form-card.soon p { color: var(--muted); }
-.form-card.soon .go { color: var(--muted); }
-.form-card.soon:hover .go { color: var(--slate); }
+.form-card-foot {
+  margin-top: auto;
+  padding-top: 14px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px;
+}
+.form-card .trec-link {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12.5px; font-weight: 500; color: var(--blue);
+  text-decoration: none;
+  transition: gap .14s;
+}
+.form-card .trec-link:hover { gap: 7px; text-decoration: underline; }
 .form-card h3 {
   font-size: 15px; font-weight: 600; margin: 6px 0 0;
   letter-spacing: -0.01em; line-height: 1.3;
@@ -457,6 +487,17 @@ h1 em { font-style: normal; color: var(--blue); }
 }
 .farm-foot a { color: var(--slate); text-decoration: none; font-weight: 500; }
 .farm-foot a:hover { color: var(--blue); }
+.farm-foot > div { font-size: 14px; line-height: 1.6; max-width: 720px; }
+.farm-foot strong { color: var(--slate); font-weight: 600; }
+.see-all-forms.popped {
+  animation: see-all-pop .55s cubic-bezier(.36, 1.5, .55, 1) both;
+  pointer-events: none;
+}
+@keyframes see-all-pop {
+  0%   { transform: scale(1) rotate(0); opacity: 1; }
+  35%  { transform: scale(1.18) rotate(-2deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
 
 /* SEO copy block */
 .seo-prose {
