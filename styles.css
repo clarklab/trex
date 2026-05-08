@@ -195,6 +195,12 @@ h1 em { font-style: normal; color: var(--blue); }
 
 /* drop zone */
 .drop-wrap { margin: 34px auto 0; width: 100%; }
+/* On wider viewports the rich result card breaks out of the .page
+   max-width so reviews have more room. .page stays at 920px for nav,
+   hero, forms, FAQ, and footer. */
+@media (min-width: 1100px) {
+  .drop-wrap { margin-left: -52px; margin-right: -52px; width: auto; }
+}
 .drop {
   position: relative;
   background: var(--white);
@@ -306,35 +312,47 @@ h1 em { font-style: normal; color: var(--blue); }
   .terms-grid { grid-template-columns: 1fr; }
 }
 .term {
-  display: flex; flex-direction: column; gap: 4px;
-  min-width: 0; min-height: 64px;
+  display: grid;
+  grid-template-rows: 14px 26px auto;
+  row-gap: 6px;
+  align-content: start;
+  min-width: 0;
 }
 .term-label {
   font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
   font-size: 10.5px; font-weight: 600; letter-spacing: .1em;
   color: var(--muted); text-transform: uppercase;
+  line-height: 14px;
+  display: flex; align-items: center;
 }
 .term-value {
   font-size: 22px; font-weight: 600; letter-spacing: -0.02em;
-  color: var(--slate); line-height: 1.15;
+  color: var(--slate); line-height: 26px;
   word-break: break-word;
+  display: flex; align-items: center;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .term-value.empty {
-  font-size: 15px; font-weight: 500;
+  font-size: 14px; font-weight: 500;
   font-style: italic;
   color: #9aa3b2;
   letter-spacing: 0;
-  display: inline-flex; align-items: center; gap: 8px;
+  gap: 8px;
 }
 .term-value.empty::before {
   content: "";
-  width: 12px; height: 1px;
+  width: 10px; height: 1px;
   background: currentColor;
   opacity: 0.6;
   flex-shrink: 0;
 }
+.term-note {
+  font-size: 12.5px;
+  line-height: 18px;
+  color: var(--muted);
+  min-height: 18px;
+}
 .term-empty .term-note { color: #9aa3b2; }
-.term-note { font-size: 12.5px; color: var(--muted); }
 .term-warning {
   display: inline-flex; align-items: flex-start; gap: 6px;
   margin-top: 6px;

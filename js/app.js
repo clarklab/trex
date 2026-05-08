@@ -501,15 +501,17 @@ function renderTermCell(label, term) {
   const cell = document.createElement("div");
   cell.className = "term";
 
-  const labelEl = document.createElement("div");
-  labelEl.className = "term-label";
-  labelEl.textContent = label;
-  cell.appendChild(labelEl);
-
   const value = term?.value;
   const note = term?.note;
   const warning = term?.warning;
   const isEmpty = !value || String(value).trim() === "";
+
+  // Always render label + value + note in fixed grid rows so cells
+  // line up across the grid even when one is filled and another isn't.
+  const labelEl = document.createElement("div");
+  labelEl.className = "term-label";
+  labelEl.textContent = label;
+  cell.appendChild(labelEl);
 
   const valueEl = document.createElement("div");
   if (!isEmpty) {
@@ -518,25 +520,22 @@ function renderTermCell(label, term) {
   } else {
     cell.classList.add("term-empty");
     valueEl.className = "term-value empty";
-    // If the AI flagged the empty field with a warning, the warning IS
-    // the headline. Otherwise show a neutral 'not filled' caption.
     valueEl.textContent = warning ? "Blank" : "Not filled";
   }
   cell.appendChild(valueEl);
 
+  const noteEl = document.createElement("div");
+  noteEl.className = "term-note";
   if (note) {
-    const noteEl = document.createElement("div");
-    noteEl.className = "term-note";
     noteEl.textContent = note;
-    cell.appendChild(noteEl);
   } else if (isEmpty && !warning) {
-    // Subtle hint that this isn't a critical issue, just unfilled.
-    const noteEl = document.createElement("div");
-    noteEl.className = "term-note";
     noteEl.textContent = "Not detected in this scan";
-    cell.appendChild(noteEl);
+  } else {
+    noteEl.innerHTML = "&nbsp;";
   }
+  cell.appendChild(noteEl);
 
+  // Warning sits below the fixed grid rows when present.
   if (warning) {
     const warnEl = document.createElement("div");
     warnEl.className = "term-warning";

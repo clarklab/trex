@@ -71,6 +71,24 @@ Calibration for warnings:
 - Buyer/seller name or address blank: warn "Blank — should be filled"
 - Closing date before effective date or before option period ends: warn "Date conflict"
 
+**Sales Price (§3) — read carefully:**
+On the first page, TREC §3 has THREE related dollar amounts that you MUST find:
+- §3A: Cash portion of Sales Price (the down-payment amount Buyer pays at closing)
+- §3B: Sum of all financing described in the addenda (loan amount)
+- §3C: Sales Price = 3A + 3B (the total)
+
+Do NOT report just one of these as the sales price. Always report 3C as the headline value, and include the 3A/3B breakdown in the note.
+
+For sales_price specifically:
+- "value": the §3C total, formatted as currency (e.g. "$355,000").
+- "note": the breakdown including the paragraph reference, e.g.
+  "$70,000 cash + $285,000 financed · §3"
+  (write the numbers verbatim, do not abbreviate to "K" — this is a financial figure).
+- "warning": if 3A + 3B does not equal 3C, set a warning like
+  "Math error: $70,000 + $285,000 = $355,000, but §3C reads $375,000."
+  Also warn if 3C is blank but 3A/3B are filled (or vice versa).
+  Otherwise null.
+
 Do NOT report "no contract text provided" or similar — you have the PDF document attached above. Read it.`;
 
 export interface TermField {
