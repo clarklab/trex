@@ -106,13 +106,18 @@ async function openPolarOverlay(onPaid, onError) {
   const errEl = document.getElementById("card-error");
   if (errEl) errEl.hidden = true;
 
-  if (!window.PolarEmbedCheckout || typeof window.PolarEmbedCheckout.create !== "function") {
+  // Polar @0.2.0 CDN script exposes window.Polar.EmbedCheckout.
+  // Older versions used window.PolarEmbedCheckout — fall back for safety.
+  const PolarEmbed =
+    (typeof window.Polar === "object" && window.Polar?.EmbedCheckout) ||
+    window.PolarEmbedCheckout;
+  if (!PolarEmbed || typeof PolarEmbed.create !== "function") {
     onError(new Error("Polar embed script not loaded"));
     return;
   }
 
   try {
-    polarHandle = await window.PolarEmbedCheckout.create(
+    polarHandle = await PolarEmbed.create(
       session.polar_checkout_url,
       { theme: "dark" },
     );
