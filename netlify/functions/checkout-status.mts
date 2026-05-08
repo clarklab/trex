@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { signToken } from "../lib/token.js";
 import { fanOutForTier, type Tier } from "../lib/fanout.js";
 
-export default async (req: Request, _context: Context) => {
+export default async (req: Request, context: Context) => {
   const url = new URL(req.url);
   const sessionId = url.searchParams.get("session_id");
   if (!sessionId) {
@@ -46,7 +46,10 @@ export default async (req: Request, _context: Context) => {
             })
             .where(eq(checkoutSessions.id, sessionId));
 
-          fanOutForTier(session.tier as Tier, session.jobId);
+          const reqOrigin = (() => {
+            try { return new URL(req.url).origin; } catch { return ""; }
+          })();
+          fanOutForTier(session.tier as Tier, session.jobId, context, reqOrigin);
 
           return Response.json({
             status: "paid",

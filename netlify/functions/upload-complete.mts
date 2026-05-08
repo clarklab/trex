@@ -4,7 +4,7 @@ import { db } from "../../db/index.js";
 import { jobs } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 
-export default async (req: Request, _context: Context) => {
+export default async (req: Request, context: Context) => {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
   }
@@ -80,13 +80,36 @@ export default async (req: Request, _context: Context) => {
     })
     .where(eq(jobs.id, job_id));
 
-  const siteUrl = Netlify.env.get("SITE_URL") || Netlify.env.get("URL") || "";
+  const reqOrigin = (() => {
+    try { return new URL(req.url).origin; } catch { return ""; }
+  })();
+  const siteUrl =
+    Netlify.env.get("SITE_URL") || Netlify.env.get("URL") || reqOrigin;
   if (siteUrl) {
-    fetch(`${siteUrl}/.netlify/functions/quick-scan-background`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ job_id }),
-    }).catch(() => {});
+    const target = `${siteUrl}/.netlify/functions/quick-scan-background`;
+    console.log(`upload-complete: triggering quick-scan-background at ${target}`);
+    context.waitUntil(
+      fetch(target, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ job_id }),
+      })
+        .then((res) => {
+          console.log(
+            `upload-complete: quick-scan-background returned ${res.status}`,
+          );
+        })
+        .catch((err) => {
+          console.error(
+            `upload-complete: failed to trigger quick-scan-background:`,
+            err instanceof Error ? err.message : err,
+          );
+        }),
+    );
+  } else {
+    console.error(
+      "upload-complete: no SITE_URL/URL/req.origin available — quick-scan won't be triggered",
+    );
   }
 
   return Response.json({ job_id, status: "processing" });

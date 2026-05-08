@@ -5,7 +5,7 @@ import { checkoutSessions } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 import { fanOutForTier, type Tier } from "../lib/fanout.js";
 
-export default async (req: Request, _context: Context) => {
+export default async (req: Request, context: Context) => {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
   }
@@ -61,7 +61,10 @@ export default async (req: Request, _context: Context) => {
         })
         .where(eq(checkoutSessions.id, sessionId));
 
-      fanOutForTier(session.tier as Tier, session.jobId);
+      const reqOrigin = (() => {
+        try { return new URL(req.url).origin; } catch { return ""; }
+      })();
+      fanOutForTier(session.tier as Tier, session.jobId, context, reqOrigin);
     }
   }
 
