@@ -157,11 +157,14 @@
       </article>
 
       <div class="legal-disclaim">
-        <strong>Legal Disclaim:</strong> My human lawyer reminds me to tell
-        you: I am not a lawyer, I'm a T-REX cartoon. In all matters, large
-        and small, the best and safest course is to use a real, human
-        lawyer. T-REX exists only to help us normal folks understand things.
-        It is not legal or financial advice. But we hope it helps!
+        <div class="cool-avatar" role="img" aria-label="T-REX cool"></div>
+        <div class="text">
+          <strong>Legal Disclaimer:</strong> My human lawyer reminds me to
+          tell you: I am not a lawyer, I'm a T-REX cartoon. In all matters,
+          large and small, the best and safest course is to use a real,
+          human lawyer. T-REX exists only to help us normal folks understand
+          things. It is not legal or financial advice. But we hope it helps!
+        </div>
       </div>
 
       <footer>
@@ -234,6 +237,10 @@
           }
         });
       })();
+    </script>
+    <script type="module">
+      import { initChat } from "/js/chat.js";
+      initChat();
     </script>
   </body>
 </html>

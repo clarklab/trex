@@ -1,6 +1,9 @@
 import { uploadFile } from "/js/upload.js";
 import { pollJobStatus } from "/js/poll.js";
 import { openCheckout } from "/js/checkout.js";
+import { initChat } from "/js/chat.js";
+
+initChat();
 
 const MAX_SIZE = 10 * 1024 * 1024;
 
