@@ -398,10 +398,11 @@ h1 em { font-style: normal; color: var(--blue); }
   margin-bottom: 24px; flex-wrap: wrap; gap: 8px;
 }
 .kicker {
-  font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--muted); font-weight: 500;
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 13px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--blue); font-weight: 600;
 }
-.section h2 { font-size: 24px; letter-spacing: -0.02em; font-weight: 600; margin: 6px 0 0; }
+.section h2 { font-size: 24px; letter-spacing: -0.02em; font-weight: 600; margin: 14px 0 0; }
 .section-h-link { font-size: 13px; color: var(--muted); text-decoration: none; }
 .section-h-link:hover { color: var(--slate); }
 
@@ -456,17 +457,33 @@ h1 em { font-style: normal; color: var(--blue); }
 .form-card.soon p { color: var(--muted); }
 .form-card-foot {
   margin-top: auto;
-  padding-top: 14px;
-  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 16px;
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: 12px;
+}
+.form-card .start-review-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--blue); color: #fff;
+  font-family: inherit; font-size: 13px; font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 0;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .15s, gap .14s, transform .12s;
+}
+.form-card .start-review-btn:hover {
+  background: #1d54c9;
   gap: 8px;
+  transform: translate3d(0, -1px, 0);
 }
 .form-card .trec-link {
   display: inline-flex; align-items: center; gap: 5px;
-  font-size: 12.5px; font-weight: 500; color: var(--blue);
+  font-size: 12.5px; font-weight: 500; color: var(--muted);
   text-decoration: none;
-  transition: gap .14s;
+  transition: gap .14s, color .14s;
 }
-.form-card .trec-link:hover { gap: 7px; text-decoration: underline; }
+.form-card .trec-link:hover { gap: 7px; color: var(--blue); }
 .form-card h3 {
   font-size: 15px; font-weight: 600; margin: 6px 0 0;
   letter-spacing: -0.01em; line-height: 1.3;
