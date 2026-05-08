@@ -1,4 +1,9 @@
 // Checkout flow: Polar embedded checkout + Lightning.
+//
+// Speed strategy:
+//   1. Show the dialog immediately so the coupon path works without delay.
+//   2. Fetch checkout-init in parallel; reveal Pay button when ready.
+//   3. Lazy-load the LN invoice only if the user clicks the Lightning tab.
 
 import { pollCheckoutStatus } from "/js/poll.js";
 
@@ -10,56 +15,30 @@ export async function openCheckout(jobId, tier, onPaid, onError) {
   resetState();
   const dialog = document.getElementById("checkout-dialog");
 
-  try {
-    const res = await fetch("/api/checkout-init", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ job_id: jobId, tier }),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || `checkout-init ${res.status}`);
-    }
-    session = await res.json();
-  } catch (err) {
-    onError(err);
-    return;
-  }
-
+  // 1) Render the static parts of the dialog and open it immediately.
   const titleEl = document.querySelector("#checkout-dialog h2");
   const subEl = document.querySelector("#checkout-dialog .dialog-sub");
   const payBtn = document.getElementById("pay-card");
   if (tier === "panel") {
     if (titleEl) titleEl.textContent = "Unlock panel review";
     if (subEl) subEl.textContent = "$12.00 USD — three frontier AIs review your contract.";
-    if (payBtn) payBtn.textContent = "Pay $12 with card";
+    if (payBtn) payBtn.textContent = "Loading…";
   } else {
     if (titleEl) titleEl.textContent = "Unlock full report";
     if (subEl) subEl.textContent = "$5.00 USD — one-time, no account.";
-    if (payBtn) payBtn.textContent = "Pay $5 with card";
+    if (payBtn) payBtn.textContent = "Loading…";
   }
-
-  if (!session.polar_checkout_url) {
-    onError(new Error("Polar checkout is not configured on the server"));
-    return;
-  }
-
   if (payBtn) {
-    payBtn.disabled = false;
-    payBtn.onclick = () => openPolarOverlay(onPaid, onError);
+    payBtn.disabled = true;
+    payBtn.onclick = null;
   }
 
+  // Hide LN tab until we know if it's available.
   const lnTab = document.getElementById("ln-tab");
-  if (session.ln_available) {
-    lnTab.hidden = false;
-  }
+  if (lnTab) lnTab.hidden = true;
 
   setupTabs();
   setupCoupon(jobId, tier, onPaid);
-
-  if (session.ln_available) {
-    setupLightning(onPaid, onError, tier);
-  }
 
   document.querySelectorAll("[data-close]").forEach((b) => {
     b.onclick = () => {
@@ -72,6 +51,55 @@ export async function openCheckout(jobId, tier, onPaid, onError) {
   });
 
   dialog.showModal();
+
+  // 2) Fetch checkout-init in the background. Only the card and LN paths
+  //    depend on this — the coupon path is already wired up.
+  let initData;
+  try {
+    const res = await fetch("/api/checkout-init", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ job_id: jobId, tier }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `checkout-init ${res.status}`);
+    }
+    initData = await res.json();
+  } catch (err) {
+    // Don't blow away the dialog — the coupon path may still work.
+    const errEl = document.getElementById("card-error");
+    if (errEl) {
+      errEl.textContent = (err && err.message) || "Failed to initialize checkout";
+      errEl.hidden = false;
+    }
+    if (payBtn) payBtn.textContent = tier === "panel" ? "Pay $12 with card" : "Pay $5 with card";
+    return;
+  }
+  session = initData;
+
+  if (!session.polar_checkout_url) {
+    const errEl = document.getElementById("card-error");
+    if (errEl) {
+      errEl.textContent = "Polar checkout is not configured on the server";
+      errEl.hidden = false;
+    }
+    return;
+  }
+
+  // 3) Card path is ready — enable Pay button.
+  if (payBtn) {
+    payBtn.disabled = false;
+    payBtn.textContent = tier === "panel" ? "Pay $12 with card" : "Pay $5 with card";
+    payBtn.onclick = () => openPolarOverlay(onPaid, onError);
+  }
+
+  // 4) LN tab: show only if backend advertises availability. Don't fetch
+  //    the invoice until the user clicks the tab.
+  if (session.ln_available && lnTab) {
+    lnTab.hidden = false;
+    setupLightningLazy(onPaid, onError, tier);
+  }
 }
 
 async function openPolarOverlay(onPaid, onError) {
@@ -200,13 +228,57 @@ function setupTabs() {
   });
 }
 
-function setupLightning(onPaid, onError, tier) {
+// Lazy-load the LN invoice on first click of the Lightning tab.
+function setupLightningLazy(onPaid, onError, tier) {
+  const lnTabBtn = document.querySelector('[data-tab="lightning"]');
+  if (!lnTabBtn) return;
+
+  let lnLoaded = false;
+
+  lnTabBtn.addEventListener(
+    "click",
+    async () => {
+      if (lnLoaded) return;
+      lnLoaded = true;
+
+      const amountEl = document.getElementById("ln-amount");
+      const statusEl = document.getElementById("ln-status");
+      if (amountEl) amountEl.textContent = "Generating invoice…";
+      if (statusEl) statusEl.textContent = "";
+
+      try {
+        const res = await fetch("/api/checkout-ln-invoice", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ session_id: session.session_id }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || `Failed to load LN invoice (${res.status})`);
+        }
+        const ln = await res.json();
+        session.ln_invoice = ln.ln_invoice;
+        session.ln_amount_sats = ln.ln_amount_sats;
+        renderLightning(tier);
+        startLightningPolling(onPaid, onError);
+      } catch (err) {
+        lnLoaded = false; // allow retry on next click
+        if (amountEl) amountEl.textContent = "Could not load Lightning invoice";
+        if (statusEl) statusEl.textContent = (err && err.message) || "";
+      }
+    },
+  );
+}
+
+function renderLightning(tier) {
   const sats = session.ln_amount_sats;
   const usd = session.price_usd ?? (tier === "panel" ? 12 : 5);
   document.getElementById("ln-amount").textContent =
     `${sats.toLocaleString()} sats (~$${usd.toFixed(2)})`;
   document.getElementById("ln-link").href =
     `lightning:${session.ln_invoice}`;
+  const statusEl = document.getElementById("ln-status");
+  if (statusEl) statusEl.textContent = "Waiting for payment…";
 
   const canvas = document.getElementById("qr");
   if (window.QRCode) {
@@ -226,21 +298,17 @@ function setupLightning(onPaid, onError, tier) {
       console.warn("clipboard write failed:", err);
     }
   };
+}
 
-  document.querySelector('[data-tab="lightning"]').addEventListener(
-    "click",
-    () => {
-      if (stopPolling) stopPolling();
-      stopPolling = pollCheckoutStatus(
-        session.session_id,
-        (data) => {
-          document.getElementById("checkout-dialog").close();
-          onPaid(data);
-        },
-        onError,
-      );
+function startLightningPolling(onPaid, onError) {
+  if (stopPolling) stopPolling();
+  stopPolling = pollCheckoutStatus(
+    session.session_id,
+    (data) => {
+      document.getElementById("checkout-dialog").close();
+      onPaid(data);
     },
-    { once: true },
+    onError,
   );
 }
 
@@ -253,6 +321,7 @@ function resetState() {
     try { polarHandle.close(); } catch {}
   }
   polarHandle = null;
+  session = null;
   const errEl = document.getElementById("card-error");
   if (errEl) errEl.hidden = true;
 }

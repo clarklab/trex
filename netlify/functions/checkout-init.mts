@@ -3,7 +3,6 @@ import { Polar } from "@polar-sh/sdk";
 import { db } from "../../db/index.js";
 import { jobs, checkoutSessions } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
-import { fetchLnurlInvoice, usdToSats } from "../lib/lightning.js";
 import type { Tier } from "../lib/fanout.js";
 
 const TIER_PRICES: Record<Tier, number> = {
@@ -35,7 +34,7 @@ export default async (req: Request, _context: Context) => {
   if (!polarToken) {
     return Response.json({ error: "Polar not configured" }, { status: 500 });
   }
-  const lnAddress = Netlify.env.get("ALBY_LN_ADDRESS");
+  const lnAvailable = !!Netlify.env.get("ALBY_LN_ADDRESS");
 
   let body: { job_id?: string; tier?: string };
   try {
@@ -97,30 +96,9 @@ export default async (req: Request, _context: Context) => {
     .set({ polarCheckoutId: polarCheckout.id })
     .where(eq(checkoutSessions.id, session.id));
 
-  let lnInvoice: string | null = null;
-  let lnAmountSats: number | null = null;
-  let lnVerifyUrl: string | null = null;
-  let lnPaymentHash: string | null = null;
-
-  if (lnAddress) {
-    try {
-      const sats = await usdToSats(priceUsd);
-      const inv = await fetchLnurlInvoice(lnAddress, sats);
-      lnInvoice = inv.pr;
-      lnAmountSats = sats;
-      lnVerifyUrl = inv.verify ?? null;
-      lnPaymentHash = inv.payment_hash ?? null;
-    } catch (err) {
-      console.warn("LN invoice creation failed:", err);
-    }
-  }
-
-  if (lnPaymentHash || lnVerifyUrl) {
-    await db
-      .update(checkoutSessions)
-      .set({ lnPaymentHash, lnVerifyUrl })
-      .where(eq(checkoutSessions.id, session.id));
-  }
+  // LN invoice is fetched lazily by /api/checkout-ln-invoice when (and if)
+  // the user clicks the Lightning tab. Keeps the dialog snappy for the
+  // common card path.
 
   return Response.json({
     session_id: session.id,
@@ -128,9 +106,7 @@ export default async (req: Request, _context: Context) => {
     price_usd: priceUsd,
     polar_checkout_id: polarCheckout.id,
     polar_checkout_url: polarCheckout.url,
-    ln_invoice: lnInvoice,
-    ln_amount_sats: lnAmountSats,
-    ln_available: lnInvoice !== null,
+    ln_available: lnAvailable,
   });
 };
 
