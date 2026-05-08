@@ -101,6 +101,7 @@ body {
   padding: 5px 11px; border-radius: 999px;
 }
 .eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--coral); }
+.eyebrow strong { font-weight: 600; color: var(--slate); }
 .micro-features {
   list-style: none; margin: 4px 0 0; padding: 0;
   display: flex; flex-wrap: wrap; gap: 6px 18px;
@@ -388,12 +389,28 @@ h1 em { font-style: normal; color: var(--blue); }
   transition: background .14s;
 }
 .form-card:hover { background: #FCFDFF; }
+.form-card .num-pill-row {
+  display: flex; align-items: center; gap: 6px;
+  align-self: flex-start; flex-wrap: wrap;
+}
 .form-card .num-pill {
-  display: inline-flex; align-items: center; gap: 6px; align-self: flex-start;
+  display: inline-flex; align-items: center; gap: 6px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px; color: var(--blue); background: var(--blue-50);
   padding: 3px 8px; border-radius: 6px;
 }
+.form-card .soon-pill {
+  display: inline-flex; align-items: center;
+  font-family: 'Google Sans Flex', inherit;
+  font-size: 10px; font-weight: 600; letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #B33B1F; background: #FFF1EC;
+  padding: 3px 8px; border-radius: 6px;
+}
+.form-card.soon h3,
+.form-card.soon p { color: var(--muted); }
+.form-card.soon .go { color: var(--muted); }
+.form-card.soon:hover .go { color: var(--slate); }
 .form-card h3 {
   font-size: 15px; font-weight: 600; margin: 6px 0 0;
   letter-spacing: -0.01em; line-height: 1.3;

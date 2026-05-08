@@ -31,7 +31,8 @@ export default async (req: Request, _context: Context) => {
       .where(eq(jobs.id, jobId));
 
     const text = await extractPdfText(jobId, job.blobKey);
-    const prompt = buildDeepPrompt(text);
+    const formId = (job.stage1Result as { form_id?: string } | null)?.form_id ?? null;
+    const prompt = buildDeepPrompt(text, formId);
 
     const genAI = new GoogleGenAI({});
     const response = await genAI.models.generateContent({

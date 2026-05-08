@@ -1,33 +1,27 @@
 import { extractJson } from "./json-extract.js";
 import type { Stage2Result } from "./report-pdf.js";
+import { getFormEntry } from "./form-prompts/registry.js";
 
-export const DEEP_PROMPT = `You are analyzing a Texas Real Estate Commission (TREC) contract in detail. Return ONLY valid JSON, no prose, no markdown fences.
+const JSON_OUTPUT_INSTRUCTION = `
+---
 
-Compare the contract against the corresponding standard TREC form. Identify EVERY clause that has been modified, added, or removed relative to the standard form.
+## OUTPUT FORMAT — REQUIRED
 
-For each modification, provide:
-- "clause": short title for the clause (5-10 words)
-- "standard_text": what the standard TREC form says (or "(clause not in standard form)" if added)
-- "contract_text": what this contract says (or "(clause removed from standard)" if removed)
-- "explanation": plain-English explanation of what changed and what it means for the parties (2-4 sentences)
-- "risk": "low", "medium", or "high"
-- "questions": array of 1-3 specific questions the user should ask the other party or their attorney
+Ignore any prior output-format instructions in this prompt. Return **ONLY valid JSON**, no prose, no markdown fences. The JSON must match this exact shape:
 
-Also include "summary" (2-3 paragraph overall summary of the contract) and "full_terms" (key/value object of all material terms - price, dates, parties, financing, contingencies, etc).
-
-Return this exact JSON structure:
+\`\`\`json
 {
   "form_id": "20-18",
   "form_name": "One to Four Family Residential Contract (Resale)",
-  "summary": "...",
+  "summary": "2-3 paragraph plain-English summary of the contract, the parties, and the most important issues.",
   "modifications": [
     {
-      "clause": "Inspection contingency",
-      "standard_text": "...",
-      "contract_text": "...",
-      "explanation": "...",
-      "risk": "high",
-      "questions": ["...", "..."]
+      "clause": "Short title (5-10 words)",
+      "standard_text": "What the standard TREC form says (or '(clause not in standard form)' if added).",
+      "contract_text": "What this contract says (or '(clause removed from standard)' if removed).",
+      "explanation": "Plain-English explanation of what changed and what it means for the parties (2-4 sentences).",
+      "risk": "low | medium | high",
+      "questions": ["Question 1 to ask the other party", "Question 2", "..."]
     }
   ],
   "full_terms": {
@@ -39,10 +33,31 @@ Return this exact JSON structure:
     "seller": "John Smith",
     "financing_type": "Conventional"
   }
-}`;
+}
+\`\`\`
 
-export function buildDeepPrompt(pdfText: string): string {
-  return `${DEEP_PROMPT}\n\nContract text:\n---\n${pdfText}\n---`;
+Rules for the JSON:
+- Every modification you flag (under your Step 5 form-integrity check, Step 6 addenda check, and Step 7 internal-consistency check) goes into "modifications".
+- Use "high" for critical / unenforceable / UPL exposure / missing required addendum issues. Use "medium" for inconsistencies, missing initials, ambiguous deadlines. Use "low" for minor notes.
+- "summary" is plain English for a non-lawyer.
+- "full_terms" is a flat key/value object of every material business term you extracted in Step 2.
+- If the contract appears clean (no modifications), return an empty modifications array.
+`;
+
+const FALLBACK_PROMPT = `You are analyzing a Texas Real Estate Commission (TREC) contract in detail. The form-specific reference is not available, so use your general knowledge of TREC promulgated forms.
+
+Compare the contract against your understanding of the corresponding standard TREC form. Identify EVERY clause that has been modified, added, or removed.
+
+For each modification, classify the risk and explain in plain English. Identify the form, summarize the contract, and extract every material term.`;
+
+export function buildDeepPrompt(pdfText: string, formId?: string | null): string {
+  const entry = getFormEntry(formId);
+  const reviewPrompt = entry?.prompt || FALLBACK_PROMPT;
+  const referenceBlock = entry?.referenceText
+    ? `## REFERENCE FORM (blank ${entry.formId})\n\n${entry.referenceText}\n\n---\n\n`
+    : "";
+
+  return `${reviewPrompt}\n\n${referenceBlock}## EXECUTED CONTRACT (under review)\n\n${pdfText}\n\n---\n${JSON_OUTPUT_INSTRUCTION}`;
 }
 
 export function parseDeepResult(text: string): Stage2Result {
