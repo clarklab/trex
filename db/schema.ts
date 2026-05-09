@@ -46,6 +46,7 @@ export const checkoutSessions = pgTable("checkout_sessions", {
   method: text("method"),
 
   polarCheckoutId: text("polar_checkout_id"),
+  recoveryCode: text("recovery_code").unique(),
   lnPaymentHash: text("ln_payment_hash"),
   lnVerifyUrl: text("ln_verify_url"),
 
