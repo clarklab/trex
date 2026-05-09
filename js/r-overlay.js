@@ -74,7 +74,8 @@ export async function mount(container, ctx) {
   const userImg = document.getElementById("overlay-user");
   const blankImg = document.getElementById("overlay-blank");
   const stack = document.getElementById("overlay-stack");
-  stack.style.width = manifest.width + "px";
+  stack.style.width = "100%";
+  stack.style.maxWidth = manifest.width + "px";
   stack.style.aspectRatio = `${manifest.width} / ${manifest.height}`;
 
   const totalPages = pdf.numPages;

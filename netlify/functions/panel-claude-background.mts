@@ -5,8 +5,9 @@ import { db } from "../../db/index.js";
 import { jobs } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 import { loadPdfBase64 } from "../lib/pdf-blob.js";
-import { buildDeepPromptForAttachment, parseDeepResult } from "../lib/deep-prompt.js";
-import { generateReportPdf } from "../lib/report-pdf.js";
+import { buildDeepPromptForAttachment } from "../lib/deep-prompt.js";
+import { generateReportPdf, type Stage2Result } from "../lib/report-pdf.js";
+import { SUBMIT_REVIEW_TOOL } from "../lib/deep-scan-tool.js";
 
 const MODEL = "claude-opus-4-7";
 const MODEL_LABEL = "Claude Opus 4.7";
@@ -47,6 +48,8 @@ export default async (req: Request, _context: Context) => {
     const message = await anthropic.messages.create({
       model: MODEL,
       max_tokens: 8192,
+      tools: [SUBMIT_REVIEW_TOOL],
+      tool_choice: { type: "tool", name: "submit_review" },
       messages: [
         {
           role: "user",
@@ -64,11 +67,16 @@ export default async (req: Request, _context: Context) => {
         },
       ],
     });
-    const firstBlock = message.content[0];
-    if (!firstBlock || firstBlock.type !== "text") {
-      throw new Error("AI response had no text content");
+    const toolUse = message.content.find(
+      (block) => block.type === "tool_use" && block.name === "submit_review",
+    );
+    if (!toolUse || toolUse.type !== "tool_use") {
+      throw new Error(
+        `panel-claude (${MODEL}) did not call submit_review. content: ` +
+          JSON.stringify(message.content.map((b) => b.type)),
+      );
     }
-    const result = parseDeepResult(firstBlock.text);
+    const result = toolUse.input as Stage2Result;
 
     const reportPdf = await generateReportPdf(
       (job.stage1Result as Record<string, unknown>) || null,
