@@ -4,118 +4,157 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Your TREC Report — T-REX Lawyer</title>
+    <link rel="apple-touch-icon" href="/assets/avatar-default.png" />
+    <link rel="icon" type="image/png" href="/assets/avatar-default.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@8..36,400;8..36,500;8..36,600;8..36,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="/styles.css" />
-    <link rel="icon" href="/assets/icon-texas.svg" />
   </head>
   <body class="r-page">
-    <header class="r-header">
-      <a href="/" class="r-logo">
-        <span class="logo-mark"></span>
-        <span class="logo-text">T-REX LAWYER</span>
-      </a>
-    </header>
-
-    <main class="r-main">
-      <section class="r-disclaimer" id="r-disclaimer">
-        <strong>This URL is your login.</strong>
-        Anyone with it can see this report. We don't store personal info
-        beyond what's in the contract data.
-      </section>
-
-      <section class="r-share" id="r-share">
-        <label class="r-share-label">Save or share this URL</label>
-        <div class="r-share-row">
-          <input
-            id="r-share-input"
-            class="r-share-input"
-            readonly
-            value=""
-          />
-          <button class="btn primary" id="r-share-copy">📋 Copy</button>
+    <div class="page r-page-frame">
+      <nav class="nav r-nav">
+        <a class="brand" href="/" aria-label="T-REX LAWYER home">
+          <div class="mark" role="img" aria-label="T-REX"></div>
+          <span>T-REX LAWYER</span>
+        </a>
+        <div class="nav-links">
+          <a href="/#how">How it works</a>
+          <a href="/#forms">Forms</a>
+          <a href="/#faq">FAQ</a>
         </div>
-      </section>
-
-      <nav class="r-tabs" id="r-tabs">
-        <button class="r-tab active" data-tab="report">📄 Full Report</button>
-        <button class="r-tab" data-tab="overlay">🔍 Visual Overlay</button>
-        <button class="r-tab" data-tab="chat">💬 Chat</button>
       </nav>
 
-      <section class="r-tab-pane" data-pane="report">
-        <div id="r-report-content"></div>
-      </section>
-      <section class="r-tab-pane" data-pane="overlay" hidden>
-        <div id="r-overlay-content"></div>
-      </section>
-      <section class="r-tab-pane" data-pane="chat" hidden>
-        <div id="r-chat-content"></div>
-      </section>
+      <main class="r-shell">
+        <header class="report-header">
+          <div class="report-eyebrow">
+            <span class="msym" aria-hidden="true">verified</span>
+            <span>Your unlocked report</span>
+          </div>
+          <h1 class="report-title" id="r-title">Your TREC contract review</h1>
+          <p class="report-deck" id="r-deck">Plain-English findings on every paragraph that matters.</p>
+        </header>
 
-      <footer class="r-footer-meta" id="r-meta"></footer>
-    </main>
-
-    <!-- Reuse the same loader markup from index.html.
-         IMPORTANT: paste the full <section id="generating-loader">
-         block from index.html here verbatim — render.js's controller
-         expects exactly this DOM structure. -->
-        <section id="generating-loader" class="generating-loader" hidden>
-          <div class="generating-card">
-            <!-- Single tier: one rex centered -->
-            <div class="rex-stage" data-mode="single" hidden>
-              <div class="rex-spotlight"></div>
-              <img
-                class="rex-hero"
-                id="rex-hero"
-                src="/assets/rex.png"
-                alt=""
-                width="220"
-                height="220"
-              />
+        <section class="share-card" id="r-share">
+          <div class="share-card-head">
+            <div class="share-card-icon" aria-hidden="true">
+              <span class="msym">key</span>
             </div>
-
-            <!-- Panel tier: three rexes side by side -->
-            <div class="rex-stage" data-mode="panel" hidden>
-              <div class="rex-trio">
-                <div class="rex-trio-card" data-model="claude">
-                  <div class="rex-trio-spot"></div>
-                  <img class="rex-trio-img" data-trio-img="claude" src="/assets/rex.png" alt="" width="120" height="120" />
-                  <div class="rex-trio-name">Claude Opus 4.7</div>
-                  <div class="rex-trio-state" data-trio-state="claude">Reading…</div>
-                </div>
-                <div class="rex-trio-card" data-model="gpt">
-                  <div class="rex-trio-spot"></div>
-                  <img class="rex-trio-img" data-trio-img="gpt" src="/assets/rex-concern.png" alt="" width="120" height="120" />
-                  <div class="rex-trio-name">GPT-5.5 Pro</div>
-                  <div class="rex-trio-state" data-trio-state="gpt">Reading…</div>
-                </div>
-                <div class="rex-trio-card" data-model="gemini">
-                  <div class="rex-trio-spot"></div>
-                  <img class="rex-trio-img" data-trio-img="gemini" src="/assets/rex-cheer.png" alt="" width="120" height="120" />
-                  <div class="rex-trio-name">Gemini 2.5 Pro</div>
-                  <div class="rex-trio-state" data-trio-state="gemini">Reading…</div>
-                </div>
-              </div>
-            </div>
-
-            <h3 class="generating-headline" id="generating-headline">
-              Generating your full report…
-            </h3>
-            <p class="generating-status" id="generating-status">
-              Reading every paragraph carefully…
-            </p>
-            <div class="generating-bar" id="generating-bar" aria-hidden="true">
-              <div class="generating-bar-fill"></div>
-            </div>
-            <p class="generating-meta" id="generating-meta">
-              This usually takes 20–60 seconds. Don't close this tab.
-            </p>
-            <div class="generating-actions" id="generating-actions" hidden>
-              <button type="button" class="btn primary" id="generating-retry">
-                Try again
-              </button>
+            <div class="share-card-headings">
+              <h2 class="share-card-title">This URL <em>is</em> your login</h2>
+              <p class="share-card-blurb">
+                There are no accounts. Anyone with this link can see this report.
+                Bookmark it, send it to your spouse, or share it with your attorney —
+                we don't store any personal info beyond what's in the contract.
+              </p>
             </div>
           </div>
+          <div class="share-card-row">
+            <span class="msym share-card-row-icon" aria-hidden="true">link</span>
+            <input
+              id="r-share-input"
+              class="share-card-input"
+              readonly
+              value=""
+              aria-label="Shareable report URL"
+            />
+            <button class="share-card-copy" id="r-share-copy" type="button">
+              <span class="msym" aria-hidden="true">content_copy</span>
+              <span class="share-card-copy-label">Copy</span>
+            </button>
+          </div>
         </section>
+
+        <nav class="r-tabs" id="r-tabs" aria-label="Report sections">
+          <button class="r-tab active" data-tab="report" type="button">
+            <span class="msym" aria-hidden="true">description</span>
+            Full Report
+          </button>
+          <button class="r-tab" data-tab="overlay" type="button">
+            <span class="msym" aria-hidden="true">layers</span>
+            Visual Overlay
+          </button>
+          <button class="r-tab" data-tab="chat" type="button">
+            <span class="msym" aria-hidden="true">forum</span>
+            Chat
+          </button>
+        </nav>
+
+        <section class="r-tab-pane" data-pane="report">
+          <div id="r-report-content"></div>
+        </section>
+        <section class="r-tab-pane" data-pane="overlay" hidden>
+          <div id="r-overlay-content"></div>
+        </section>
+        <section class="r-tab-pane" data-pane="chat" hidden>
+          <div id="r-chat-content"></div>
+        </section>
+
+        <footer class="r-footer-meta" id="r-meta"></footer>
+      </main>
+    </div>
+
+    <!-- Loader markup — render.js's controller looks up these IDs by name.
+         Do not rename or remove. -->
+    <section id="generating-loader" class="generating-loader" hidden>
+      <div class="generating-card">
+        <div class="rex-stage" data-mode="single" hidden>
+          <div class="rex-spotlight"></div>
+          <img
+            class="rex-hero"
+            id="rex-hero"
+            src="/assets/rex.png"
+            alt=""
+            width="220"
+            height="220"
+          />
+        </div>
+
+        <div class="rex-stage" data-mode="panel" hidden>
+          <div class="rex-trio">
+            <div class="rex-trio-card" data-model="claude">
+              <div class="rex-trio-spot"></div>
+              <img class="rex-trio-img" data-trio-img="claude" src="/assets/rex.png" alt="" width="120" height="120" />
+              <div class="rex-trio-name">Claude Opus 4.7</div>
+              <div class="rex-trio-state" data-trio-state="claude">Reading…</div>
+            </div>
+            <div class="rex-trio-card" data-model="gpt">
+              <div class="rex-trio-spot"></div>
+              <img class="rex-trio-img" data-trio-img="gpt" src="/assets/rex-concern.png" alt="" width="120" height="120" />
+              <div class="rex-trio-name">GPT-5.5 Pro</div>
+              <div class="rex-trio-state" data-trio-state="gpt">Reading…</div>
+            </div>
+            <div class="rex-trio-card" data-model="gemini">
+              <div class="rex-trio-spot"></div>
+              <img class="rex-trio-img" data-trio-img="gemini" src="/assets/rex-cheer.png" alt="" width="120" height="120" />
+              <div class="rex-trio-name">Gemini 2.5 Pro</div>
+              <div class="rex-trio-state" data-trio-state="gemini">Reading…</div>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="generating-headline" id="generating-headline">
+          Generating your full report…
+        </h3>
+        <p class="generating-status" id="generating-status">
+          Reading every paragraph carefully…
+        </p>
+        <div class="generating-bar" id="generating-bar" aria-hidden="true">
+          <div class="generating-bar-fill"></div>
+        </div>
+        <p class="generating-meta" id="generating-meta">
+          This usually takes 20–60 seconds. Don't close this tab.
+        </p>
+        <div class="generating-actions" id="generating-actions" hidden>
+          <button type="button" class="btn primary" id="generating-retry">
+            Try again
+          </button>
+        </div>
+      </div>
+    </section>
 
     <script type="module" src="/js/r.js"></script>
   </body>

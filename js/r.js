@@ -162,9 +162,12 @@ function gateOverlayTab(data) {
 function showPaidToast() {
   const toast = document.createElement("div");
   toast.className = "r-paid-toast";
-  toast.textContent = "✓ Payment confirmed. Your report is being generated.";
+  toast.innerHTML =
+    '<span class="msym" aria-hidden="true">check_circle</span>' +
+    "<span>Payment confirmed — your report is being generated.</span>";
+  const shell = document.querySelector(".r-shell");
   const share = $("r-share");
-  if (share) share.parentNode.insertBefore(toast, share);
+  if (shell && share) shell.insertBefore(toast, share);
   setTimeout(() => toast.remove(), 8000);
 }
 
@@ -173,7 +176,7 @@ function renderFooterMeta(data) {
   if (!meta) return;
   const tier = data.tier === "panel" ? "Panel review"
     : data.tier === "single" ? "Single review"
-      : "—";
+      : "Free preview";
   const stage1 = data.stage1?.result || {};
   const formLabel = stage1.form_id
     ? "TREC " + stage1.form_id + (stage1.form_name ? " · " + escapeHtml(stage1.form_name) : "")
@@ -186,18 +189,22 @@ function renderFooterMeta(data) {
     ? "Paid " + new Date(data.paid_at).toLocaleDateString()
     : "Not yet paid";
   meta.innerHTML =
-    "<span>Tier: " + escapeHtml(tier) + "</span>" +
-    "<span>" + paid + "</span>" +
-    "<span>Form: " + formLabel + (pages ? " · " + pages : "") + (mods ? " · " + mods : "") + "</span>";
+    '<span><span class="msym">workspace_premium</span><strong>Tier:</strong> ' + escapeHtml(tier) + "</span>" +
+    '<span><span class="msym">payments</span>' + paid + "</span>" +
+    '<span><span class="msym">description</span>' + formLabel + (pages ? " · " + pages : "") + (mods ? " · " + mods : "") + "</span>";
 }
 
 function renderFatal(msg) {
-  const main = document.querySelector(".r-main");
-  if (main) {
-    main.innerHTML =
-      '<div class="r-disclaimer" style="background:#FDECEC;border-color:#F5C6C6;color:#8B1A1A">' +
-      escapeHtml(msg) +
-      "</div>";
+  const shell = document.querySelector(".r-shell");
+  if (shell) {
+    shell.innerHTML =
+      '<section class="report-section" style="border-color:#F5C6C6;background:#FFF7F5">' +
+      '<div class="report-section-head"><div>' +
+      '<div class="kicker" style="color:#B33B1F"><span class="msym">error</span>Report not found</div>' +
+      '<h2 style="color:#B33B1F">' + escapeHtml(msg) + "</h2>" +
+      '</div></div>' +
+      '<a href="/" class="r-action ghost" style="align-self:flex-start"><span class="msym">arrow_back</span>Back to home</a>' +
+      '</section>';
   }
 }
 
@@ -213,19 +220,28 @@ function renderReportTab() {
   if (!state.data) return;
   if (!state.paid) {
     target.innerHTML =
-      '<div class="r-disclaimer" style="background:#FFF;border:1px solid var(--hair);color:var(--slate)">' +
-      'This URL is for an unpaid report. Return to <a href="/">trexlawyer.com</a> to upload again.' +
-      "</div>";
+      '<section class="report-section">' +
+      '<div class="report-section-head"><div>' +
+      '<div class="kicker"><span class="msym">lock</span>Unpaid</div>' +
+      '<h2>This URL is for an unpaid report</h2>' +
+      '</div></div>' +
+      '<p class="report-prose">Return to <a href="/" style="color:var(--blue)">trexlawyer.com</a> to upload again.</p>' +
+      '</section>';
     return;
   }
 
   if (state.tier === "single") {
     const result = state.data.stage2?.result;
     if (result) {
-      target.innerHTML = singleReportHtml();
-      renderFullReport(result);
-      const dl = target.querySelector(".r-download-pdf");
-      if (dl) dl.href = pdfUrl();
+      // Render the new dashboard-style report directly into the pane.
+      renderFullReport(result, target, {
+        stage1: state.data.stage1?.result || null,
+        downloadUrl: pdfUrl(),
+        formId: state.data.stage1?.result?.form_id || result.form_id,
+        formName: state.data.stage1?.result?.form_name || result.form_name,
+        paidAt: state.data.paid_at,
+        tier: "single",
+      });
       hideGeneratingLoader();
     } else if (state.data.stage2?.status === "error") {
       insertLoaderInto("r-report-content");
@@ -257,20 +273,6 @@ function renderReportTab() {
       startPolling();
     }
   }
-}
-
-function singleReportHtml() {
-  return [
-    '<div class="full-report-actions">',
-    '  <a class="btn primary r-download-pdf" target="_blank" rel="noopener">Download PDF</a>',
-    "</div>",
-    "<h3>Summary</h3>",
-    '<p id="report-summary"></p>',
-    "<h3>Modifications</h3>",
-    '<div id="report-mods"></div>',
-    "<h3>Full Terms</h3>",
-    '<table id="report-terms"></table>',
-  ].join("\n");
 }
 
 function panelReportHtml() {

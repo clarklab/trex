@@ -1881,125 +1881,654 @@ dialog .close:hover { color: var(--slate); }
   }
 }
 
-/* Standalone /r/<code> dashboard */
+/* =============================================================
+   Standalone /r/<code> dashboard
+   ============================================================= */
+
+/* Page chrome — Inter for body, Google Sans Flex for headings,
+   matches the homepage page-grid container. */
 .r-page {
-  background: #FFFFFF;
+  background: var(--bg);
   min-height: 100vh;
-}
-.r-header {
-  padding: 22px 32px 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.r-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
+  font-family: 'Inter', 'Google Sans Flex', ui-sans-serif, system-ui, -apple-system, sans-serif;
   color: var(--slate);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
-.r-main {
+.r-page-frame { padding-bottom: 80px; }
+.r-nav { padding-bottom: 32px; }
+.r-shell {
   max-width: 980px;
   margin: 0 auto;
-  padding: 28px 24px 80px;
-}
-.r-disclaimer {
-  background: #FFF8EE;
-  border: 1px solid #F5DDB6;
-  color: #8B5A18;
-  border-radius: 12px;
-  padding: 14px 18px;
-  font-size: 13.5px;
-  line-height: 1.5;
-  margin-bottom: 24px;
-}
-.r-disclaimer strong { color: #6B4310; }
-
-.r-share {
-  margin-bottom: 28px;
-}
-.r-share-label {
-  display: block;
-  font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-.r-share-row {
   display: flex;
-  gap: 8px;
-  align-items: center;
+  flex-direction: column;
+  gap: 28px;
 }
-.r-share-input {
-  flex: 1;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 14px;
-  padding: 12px 14px;
+
+/* Report intro: eyebrow + headline + deck. Uses the brand's display
+   font for the headline so dashboards feel like a continuation of
+   the homepage hero. */
+.report-header { display: flex; flex-direction: column; gap: 8px; }
+.report-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 11px; font-weight: 600; letter-spacing: .14em;
+  color: var(--blue); text-transform: uppercase;
+}
+.report-eyebrow .msym {
+  font-size: 14px; color: inherit;
+  font-variation-settings: 'opsz' 20, 'wght' 600, 'FILL' 1, 'GRAD' 0;
+}
+.report-title {
+  font-family: 'Google Sans Flex', ui-sans-serif, system-ui, sans-serif;
+  font-size: 38px; line-height: 1.05; letter-spacing: -0.028em;
+  font-weight: 600; color: var(--slate);
+  margin: 4px 0 0; max-width: 720px;
+  text-wrap: balance;
+}
+.report-deck {
+  font-size: 16px; line-height: 1.5; color: var(--muted);
+  margin: 0; max-width: 640px; text-wrap: pretty;
+}
+@media (max-width: 720px) {
+  .report-title { font-size: 30px; }
+}
+
+/* Share card: the friendly Google-Docs-style "this URL is your login"
+   surface. Replaces the yellow alert. Uses a soft blue header strip
+   instead of warning colors. */
+.share-card {
+  background: var(--white);
+  border: 1px solid var(--hair);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.share-card-head {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 18px 22px 16px;
+  background: linear-gradient(180deg, var(--blue-50) 0%, color-mix(in srgb, var(--blue-50) 40%, white) 100%);
+  border-bottom: 1px solid color-mix(in srgb, var(--blue) 12%, white);
+}
+.share-card-icon {
+  flex-shrink: 0;
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--white);
+  border: 1px solid color-mix(in srgb, var(--blue) 18%, white);
+  color: var(--blue);
+  display: grid; place-items: center;
+}
+.share-card-icon .msym {
+  font-size: 19px;
+  font-variation-settings: 'opsz' 24, 'wght' 600, 'FILL' 1, 'GRAD' 0;
+}
+.share-card-headings { flex: 1; min-width: 0; }
+.share-card-title {
+  font-family: 'Google Sans Flex', ui-sans-serif, system-ui, sans-serif;
+  font-size: 16px; font-weight: 600; letter-spacing: -0.01em;
+  color: var(--slate); margin: 2px 0 4px;
+}
+.share-card-title em { font-style: normal; color: var(--blue); }
+.share-card-blurb {
+  margin: 0;
+  font-size: 13.5px; line-height: 1.55; color: var(--slate-2);
+}
+.share-card-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 18px;
+}
+.share-card-row-icon {
+  font-size: 18px; color: var(--muted); flex-shrink: 0;
+  font-variation-settings: 'opsz' 20, 'wght' 500, 'FILL' 0, 'GRAD' 0;
+}
+.share-card-input {
+  flex: 1; min-width: 0;
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 13.5px;
+  padding: 10px 12px;
   border: 1px solid var(--hair);
   border-radius: 10px;
   background: #FAFBFD;
   color: var(--slate);
-  min-width: 0;
+  letter-spacing: 0.01em;
+  transition: border-color .12s, background .12s;
 }
-.r-share-input:focus { outline: none; border-color: var(--blue); background: #fff; }
+.share-card-input:hover { border-color: #C9D2E0; }
+.share-card-input:focus { outline: none; border-color: var(--blue); background: var(--white); }
+.share-card-copy {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--slate); color: var(--white);
+  border: 1px solid var(--slate);
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  padding: 9px 14px; border-radius: 10px;
+  cursor: pointer; flex-shrink: 0;
+  transition: background .12s, transform .12s;
+}
+.share-card-copy:hover { background: #000; transform: translate3d(0, -1px, 0); }
+.share-card-copy.is-copied { background: #1B6E3D; border-color: #1B6E3D; }
+.share-card-copy .msym {
+  font-size: 16px;
+  font-variation-settings: 'opsz' 20, 'wght' 600, 'FILL' 1, 'GRAD' 0;
+}
+@media (max-width: 600px) {
+  .share-card-row { flex-wrap: wrap; }
+  .share-card-input { flex: 1 1 100%; order: 1; }
+  .share-card-row-icon { display: none; }
+  .share-card-copy { order: 2; margin-left: auto; }
+}
 
+/* Tabs — pill-row inside a soft frame. Uses Material Symbols icons. */
 .r-tabs {
   display: flex;
-  gap: 0;
-  border-bottom: 1px solid var(--hair);
-  margin-bottom: 24px;
+  gap: 4px;
+  background: var(--gray);
+  padding: 6px;
+  border-radius: 14px;
+  align-self: flex-start;
+  flex-wrap: wrap;
 }
 .r-tab {
-  background: none;
-  border: 0;
-  padding: 12px 20px;
+  display: inline-flex; align-items: center; gap: 8px;
+  background: transparent; border: 0; cursor: pointer;
   font-family: inherit;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 13.5px; font-weight: 500;
   color: var(--muted);
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
+  padding: 9px 14px; border-radius: 10px;
+  transition: background .12s, color .12s;
+}
+.r-tab .msym {
+  font-size: 17px; line-height: 1;
+  font-variation-settings: 'opsz' 20, 'wght' 500, 'FILL' 0, 'GRAD' 0;
 }
 .r-tab:hover { color: var(--slate); }
 .r-tab.active {
+  background: var(--white);
   color: var(--blue);
-  border-bottom-color: var(--blue);
   font-weight: 600;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .06);
 }
-.r-tab[disabled] {
-  opacity: 0.4;
-  cursor: not-allowed;
+.r-tab.active .msym {
+  font-variation-settings: 'opsz' 20, 'wght' 600, 'FILL' 1, 'GRAD' 0;
 }
+.r-tab[disabled] { opacity: 0.45; cursor: not-allowed; }
 
 .r-tab-pane[hidden] { display: none; }
 
+/* Footer meta */
 .r-footer-meta {
-  margin-top: 40px;
-  padding-top: 16px;
+  margin-top: 12px;
+  padding-top: 22px;
   border-top: 1px dashed var(--hair);
   color: var(--muted);
   font-size: 12.5px;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 24px;
+  gap: 8px 26px;
 }
+.r-footer-meta .msym { font-size: 14px; vertical-align: -2px; margin-right: 4px; }
+.r-footer-meta strong { color: var(--slate-2); font-weight: 600; }
 
+/* Toast — the post-payment "Payment confirmed" momentary notice */
 .r-paid-toast {
-  background: #E8F5E8;
-  border: 1px solid #B5D8B5;
-  color: #1B6E3D;
-  border-radius: 10px;
-  padding: 12px 16px;
-  font-size: 13.5px;
-  margin-bottom: 16px;
+  display: inline-flex; align-items: center; gap: 8px;
+  background: #ECF8EF;
+  border: 1px solid #BCE0C5;
+  color: #19663A;
+  border-radius: 999px;
+  padding: 8px 14px 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
   animation: r-toast-in 0.4s ease;
+  align-self: flex-start;
+}
+.r-paid-toast .msym {
+  font-size: 17px;
+  font-variation-settings: 'opsz' 20, 'wght' 700, 'FILL' 1, 'GRAD' 0;
 }
 @keyframes r-toast-in {
   from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* =============================================================
+   Single-tier full report (paid result)
+   Page 1 = at-a-glance dashboard. Pages 2+ = editorial sections.
+   ============================================================= */
+
+.full-report-actions {
+  display: flex; justify-content: flex-end; align-items: center;
+  margin: 0;
+}
+
+/* Section anchor — every report block sits inside this scaffold so
+   spacing + hairline borders compose consistently. */
+.report-section {
+  background: var(--white);
+  border: 1px solid var(--hair);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+}
+.report-section + .report-section { margin-top: 18px; }
+.report-section-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 14px; flex-wrap: wrap; margin-bottom: 18px;
+}
+.report-section-head .kicker {
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 10.5px; font-weight: 600; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--muted);
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.report-section-head .kicker .msym {
+  font-size: 13px; color: var(--blue);
+  font-variation-settings: 'opsz' 20, 'wght' 600, 'FILL' 1, 'GRAD' 0;
+}
+.report-section-head h2 {
+  font-family: 'Google Sans Flex', ui-sans-serif, system-ui, sans-serif;
+  font-size: 22px; line-height: 1.15; letter-spacing: -0.018em;
+  font-weight: 600; color: var(--slate);
+  margin: 4px 0 0;
+}
+.report-section-head .report-section-side {
+  font-size: 13px; color: var(--muted);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+
+/* Page 1: hero card — eyebrow + form + headline + verdict + actions */
+.report-snapshot {
+  background: var(--blue-50);
+  border: 1px solid color-mix(in srgb, var(--blue) 14%, white);
+  border-radius: var(--radius-lg);
+  padding: 26px 28px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px 24px;
+  align-items: center;
+}
+.snapshot-meta { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.snapshot-eyebrow {
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 11px; font-weight: 600; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--blue);
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.snapshot-eyebrow .msym {
+  font-size: 14px; color: inherit;
+  font-variation-settings: 'opsz' 20, 'wght' 600, 'FILL' 1, 'GRAD' 0;
+}
+.snapshot-form {
+  font-family: 'Google Sans Flex', ui-sans-serif, system-ui, sans-serif;
+  font-size: 22px; line-height: 1.2; letter-spacing: -0.018em;
+  font-weight: 600; color: var(--slate);
+  margin: 0;
+}
+.snapshot-form-id {
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 12.5px; color: var(--muted); font-weight: 500;
+  margin-top: 2px;
+  letter-spacing: 0.02em;
+}
+.snapshot-actions {
+  display: inline-flex; align-items: center; gap: 8px;
+}
+@media (max-width: 720px) {
+  .report-snapshot { grid-template-columns: 1fr; }
+}
+
+/* Severity ribbon — the at-a-glance verdict bar. */
+.severity-bar {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  margin-top: 4px;
+}
+.severity-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--white);
+  border: 1px solid var(--hair);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px; font-weight: 500;
+  color: var(--slate-2);
+}
+.severity-pill .pip {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: currentColor;
+}
+.severity-pill .count {
+  font-family: 'Google Sans Flex', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700; color: var(--slate);
+  font-variant-numeric: tabular-nums;
+  font-size: 14px;
+}
+.severity-pill.is-high   { color: #B33B1F; background: #FFF1EC; border-color: #FBD9CB; }
+.severity-pill.is-medium { color: #8B5A18; background: #FFF6E5; border-color: #F1DFB7; }
+.severity-pill.is-low    { color: #1B6E3D; background: #ECF8EF; border-color: #BCE0C5; }
+.severity-pill.is-clean  { color: #1B6E3D; background: var(--white); border-color: #BCE0C5; }
+
+/* Page 1: the deal grid — 4-col rich card grid borrowed from the
+   homepage `.terms-grid` pattern. Adds an inline severity-list panel
+   to its right for a richer at-a-glance read. */
+.report-deal-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px 22px;
+}
+@media (max-width: 880px) {
+  .report-deal-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 520px) {
+  .report-deal-grid { grid-template-columns: 1fr; }
+}
+.deal-cell {
+  display: grid;
+  grid-template-rows: 14px minmax(28px, auto) auto;
+  row-gap: 6px; align-content: start; min-width: 0;
+}
+.deal-cell-label {
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 10.5px; font-weight: 600; letter-spacing: .12em;
+  color: var(--muted); text-transform: uppercase;
+  line-height: 14px;
+  display: flex; align-items: center; gap: 6px;
+}
+.deal-cell-label .msym {
+  font-size: 13px; color: var(--blue);
+  font-variation-settings: 'opsz' 20, 'wght' 600, 'FILL' 1, 'GRAD' 0;
+}
+.deal-cell-value {
+  font-family: 'Google Sans Flex', ui-sans-serif, system-ui, sans-serif;
+  font-size: 22px; font-weight: 600; letter-spacing: -0.02em;
+  color: var(--slate); line-height: 1.2;
+  word-break: break-word;
+  display: flex; align-items: center;
+  font-variant-numeric: tabular-nums;
+  min-height: 28px;
+}
+.deal-cell-value.empty {
+  font-family: inherit;
+  font-size: 14px; font-weight: 500;
+  font-style: italic;
+  color: #9aa3b2;
+  letter-spacing: 0;
+}
+.deal-cell-note {
+  font-size: 12.5px; line-height: 1.45; color: var(--muted);
+  min-height: 18px;
+}
+.deal-cell-warning {
+  display: inline-flex; align-items: flex-start; gap: 6px;
+  margin-top: 8px;
+  background: #FFF1EC; color: #B33B1F;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 11.5px; line-height: 1.4;
+  align-self: flex-start; max-width: 100%;
+}
+.deal-cell-warning .msym {
+  font-size: 14px; flex-shrink: 0;
+  font-variation-settings: 'opsz' 20, 'wght' 700, 'FILL' 1, 'GRAD' 0;
+}
+
+/* Page 1: red-flags column — the headline "things to look at" list.
+   Sits in its own card alongside the grid. */
+.report-flags {
+  background: var(--white);
+  border: 1px solid var(--hair);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.report-flags h3 {
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 10.5px; font-weight: 600; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--muted);
+  margin: 0;
+}
+.report-flag {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--hair-2);
+  font-size: 13.5px; color: var(--slate-2);
+  line-height: 1.45;
+}
+.report-flag:last-child { border-bottom: 0; }
+.report-flag .pip {
+  width: 8px; height: 8px; border-radius: 50%;
+  margin-top: 6px; flex-shrink: 0;
+}
+.report-flag.is-high   .pip { background: #C0392B; }
+.report-flag.is-medium .pip { background: #D68910; }
+.report-flag.is-low    .pip { background: #1B6E3D; }
+.report-flags-empty {
+  display: flex; align-items: center; gap: 10px;
+  color: #1B6E3D; font-size: 13.5px;
+}
+.report-flags-empty .msym {
+  font-size: 18px;
+  font-variation-settings: 'opsz' 20, 'wght' 700, 'FILL' 1, 'GRAD' 0;
+}
+
+/* Editorial: prose summary section (page 2) */
+.report-prose {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  font-size: 15.5px; line-height: 1.65; color: var(--slate-2);
+}
+.report-prose p { margin: 0 0 12px; }
+.report-prose p:last-child { margin-bottom: 0; }
+
+/* Modifications: each is a card with a colored stripe down the left
+   edge for at-a-glance severity. */
+.mod-list { display: flex; flex-direction: column; gap: 14px; }
+.mod-card {
+  position: relative;
+  background: var(--white);
+  border: 1px solid var(--hair);
+  border-left-width: 4px;
+  border-radius: 12px;
+  padding: 18px 22px 18px 22px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.mod-card.risk-high   { border-left-color: #C0392B; }
+.mod-card.risk-medium,
+.mod-card.risk-med    { border-left-color: #D68910; }
+.mod-card.risk-low    { border-left-color: #1B6E3D; }
+.mod-head {
+  display: flex; align-items: center; gap: 12px;
+  flex-wrap: wrap;
+}
+.risk-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 10px; border-radius: 999px;
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+}
+.risk-badge .pip { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.risk-badge.risk-high   { color: #C0392B; background: #FFF1EC; }
+.risk-badge.risk-medium,
+.risk-badge.risk-med    { color: #8B5A18; background: #FFF6E5; }
+.risk-badge.risk-low    { color: #1B6E3D; background: #ECF8EF; }
+.mod-clause {
+  font-family: 'Google Sans Flex', ui-sans-serif, system-ui, sans-serif;
+  font-size: 16px; font-weight: 600; letter-spacing: -0.01em;
+  color: var(--slate);
+  flex: 1; min-width: 200px;
+}
+.mod-cmp {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 720px) {
+  .mod-cmp { grid-template-columns: 1fr; }
+}
+.mod-cmp-block {
+  background: #FAFBFD;
+  border: 1px solid var(--hair-2);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 13.5px; line-height: 1.55; color: var(--slate-2);
+}
+.mod-cmp-block.is-contract {
+  background: var(--blue-50);
+  border-color: color-mix(in srgb, var(--blue) 14%, white);
+  color: var(--slate);
+}
+.mod-cmp-label {
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 10.5px; font-weight: 600; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--muted);
+  display: block; margin-bottom: 4px;
+}
+.mod-cmp-block.is-contract .mod-cmp-label { color: var(--blue); }
+.mod-explanation {
+  font-size: 14px; line-height: 1.6; color: var(--slate-2);
+  margin: 0;
+}
+.mod-questions {
+  border-top: 1px dashed var(--hair);
+  padding-top: 12px;
+  margin-top: 4px;
+}
+.mod-questions[open] summary { color: var(--slate); }
+.mod-questions summary {
+  list-style: none;
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 11px; font-weight: 600; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--muted);
+}
+.mod-questions summary::-webkit-details-marker { display: none; }
+.mod-questions summary .msym {
+  font-size: 14px; transition: transform .15s ease;
+  font-variation-settings: 'opsz' 20, 'wght' 600, 'FILL' 0, 'GRAD' 0;
+}
+.mod-questions[open] summary .msym { transform: rotate(90deg); }
+.mod-questions ul {
+  margin: 10px 0 0; padding-left: 0; list-style: none;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.mod-questions li {
+  position: relative; padding-left: 18px;
+  font-size: 13.5px; line-height: 1.5; color: var(--slate-2);
+}
+.mod-questions li::before {
+  content: ""; position: absolute;
+  left: 0; top: 0.6em;
+  width: 8px; height: 1px; background: var(--blue);
+}
+
+.mod-empty {
+  display: flex; align-items: center; gap: 12px;
+  background: #ECF8EF;
+  border: 1px solid #BCE0C5;
+  color: #1B6E3D;
+  border-radius: 12px;
+  padding: 14px 18px;
+}
+.mod-empty .msym {
+  font-size: 22px;
+  font-variation-settings: 'opsz' 24, 'wght' 700, 'FILL' 1, 'GRAD' 0;
+}
+
+/* Full-terms reference table — grouped, striped, monospace values. */
+.terms-table {
+  display: flex; flex-direction: column; gap: 22px;
+}
+.terms-group { display: flex; flex-direction: column; gap: 0; }
+.terms-group-head {
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 11px; font-weight: 600; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--muted);
+  padding: 0 0 8px;
+}
+.terms-group-head .msym {
+  font-size: 14px; color: var(--blue);
+  font-variation-settings: 'opsz' 20, 'wght' 600, 'FILL' 1, 'GRAD' 0;
+}
+.terms-rows { display: flex; flex-direction: column; }
+.terms-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.55fr) minmax(0, 1fr);
+  gap: 16px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  align-items: baseline;
+}
+.terms-row + .terms-row { border-top: 1px solid var(--hair-2); border-radius: 0; }
+.terms-row:first-child { border-radius: 8px 8px 0 0; }
+.terms-row:last-child  { border-radius: 0 0 8px 8px; }
+.terms-row:nth-child(even) { background: #FAFBFD; }
+.terms-row-key {
+  font-size: 13px; color: var(--muted);
+  text-transform: capitalize;
+  letter-spacing: 0.005em;
+}
+.terms-row-val {
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 13px; color: var(--slate);
+  word-break: break-word;
+  font-variant-numeric: tabular-nums;
+}
+.terms-row-val.empty {
+  color: #9aa3b2; font-style: italic; font-family: inherit;
+}
+
+/* Buttons used inside the report header */
+.r-action {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: inherit;
+  font-size: 13.5px; font-weight: 600;
+  padding: 9px 16px;
+  border-radius: 10px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .12s, transform .12s, box-shadow .15s;
+}
+.r-action.primary {
+  background: var(--blue); color: var(--white); border: 1px solid var(--blue);
+}
+.r-action.primary:hover {
+  background: #1d54c9; border-color: #1d54c9;
+  transform: translate3d(0, -1px, 0);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+}
+.r-action.ghost {
+  background: var(--white); color: var(--slate);
+  border: 1px solid var(--hair);
+}
+.r-action.ghost:hover { border-color: #C9D2E0; transform: translate3d(0, -1px, 0); }
+.r-action .msym {
+  font-size: 17px;
+  font-variation-settings: 'opsz' 20, 'wght' 600, 'FILL' 1, 'GRAD' 0;
+}
+
+/* Print: when headless Chromium renders the page to PDF, hide the
+   chrome (nav, share card, tabs) and let the report content flow as
+   pages. Section breaks become page breaks for readability. */
+@media print {
+  body { background: #fff; }
+  .r-nav, .share-card, .r-tabs, .r-paid-toast,
+  .r-tab-pane[data-pane="overlay"],
+  .r-tab-pane[data-pane="chat"],
+  .full-report-actions,
+  #generating-loader { display: none !important; }
+  .r-shell { gap: 18px; }
+  .report-section, .report-snapshot {
+    border: 1px solid #d8dde5; box-shadow: none;
+    page-break-inside: avoid; break-inside: avoid;
+  }
+  .report-section + .report-section,
+  .report-snapshot + .report-section,
+  .report-section.report-section--mods {
+    page-break-before: auto;
+  }
+  .mod-card { page-break-inside: avoid; break-inside: avoid; }
+  .report-title { font-size: 28px; }
+  .snapshot-form { font-size: 18px; }
+  .deal-cell-value { font-size: 18px; }
 }
 
 /* Visual overlay viewer (lazy-loaded inside /r/<code> dashboard) */
