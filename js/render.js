@@ -186,6 +186,50 @@ export function showLoaderError(tier, message) {
   }
 }
 
+// Compact rex-themed loader for tab transitions and short waits
+// (initial /api/r/<code> fetch, overlay tab opening, etc). Distinct
+// from the big generating-loader which is reserved for AI work.
+//
+// Returns a `stop` function that clears the message-cycle timer. Caller
+// is responsible for removing the loader DOM after the underlying work
+// is done — no auto-removal so it can stay visible during transitions.
+export function mountTabLoader(target, opts = {}) {
+  if (!target) return () => {};
+  const headline = opts.headline || "Loading…";
+  const messages =
+    Array.isArray(opts.messages) && opts.messages.length
+      ? opts.messages
+      : ["Just a moment…"];
+  const intervalMs = opts.intervalMs || 2400;
+  const pose = opts.pose || "/assets/rex.webp";
+
+  target.innerHTML = `
+    <div class="tab-loading">
+      <div class="tab-loading-rex">
+        <img src="${escapeAttr(pose)}" alt="" width="160" height="160" />
+      </div>
+      <h3 class="tab-loading-headline">${escapeHtml(headline)}</h3>
+      <p class="tab-loading-text" data-tab-loading-text>${escapeHtml(messages[0])}</p>
+      <div class="tab-loading-bar" aria-hidden="true"></div>
+    </div>
+  `;
+
+  const textEl = target.querySelector("[data-tab-loading-text]");
+  if (!textEl || messages.length < 2) return () => {};
+
+  let idx = 0;
+  const timer = setInterval(() => {
+    idx = (idx + 1) % messages.length;
+    textEl.classList.add("swapping");
+    setTimeout(() => {
+      textEl.textContent = messages[idx];
+      textEl.classList.remove("swapping");
+    }, 320);
+  }, intervalMs);
+
+  return () => clearInterval(timer);
+}
+
 export function setPanelLoaderStatus(model, status) {
   const card = document.querySelector(`.rex-trio-card[data-model="${model}"]`);
   if (!card) return;

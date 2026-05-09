@@ -2286,6 +2286,12 @@ dialog .close:hover { color: var(--slate); }
   padding: 28px;
 }
 .report-section + .report-section { margin-top: 18px; }
+/* Snapshot card sits right above the first content section — pull a
+   matching gap so it doesn't kiss the next card. */
+.report-snapshot + .report-section { margin-top: 18px; }
+/* Same gap when a generic tab-loading sits above sections. */
+.tab-loading + .report-section,
+.tab-loading + .report-snapshot { margin-top: 18px; }
 .report-section-head {
   display: flex; align-items: baseline; justify-content: space-between;
   gap: 14px; flex-wrap: wrap; margin-bottom: 18px;
@@ -2643,6 +2649,104 @@ dialog .close:hover { color: var(--slate); }
 .mod-empty .msym {
   font-size: 22px;
   font-variation-settings: 'opsz' 24, 'wght' 700, 'FILL' 1, 'GRAD' 0;
+}
+
+/* Compact rex-themed loader for tab transitions and initial fetches.
+   Distinct from the big generating-loader (which is for AI work);
+   this one is shorter, friendlier, used for "the data is on its way"
+   moments — initial /api/r/<code> resolve, overlay tab opening, etc.
+   The rex WebPs are preloaded in <head> so this animates immediately. */
+.tab-loading {
+  background: var(--white);
+  border: 1px solid var(--hair);
+  border-radius: var(--radius-lg);
+  padding: 64px 24px 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  text-align: center;
+}
+.tab-loading-rex {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 160px;
+  height: 160px;
+}
+.tab-loading-rex img {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  animation: tab-loading-bob 2.4s ease-in-out infinite;
+  user-select: none;
+  -webkit-user-drag: none;
+  z-index: 1;
+}
+.tab-loading-rex::before {
+  content: "";
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  width: 130px;
+  height: 18px;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(38, 78, 222, 0.22), transparent 70%);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  animation: tab-loading-pulse 2.4s ease-in-out infinite;
+  z-index: 0;
+}
+@keyframes tab-loading-bob {
+  0%, 100% { transform: translateY(0) rotate(-1.5deg); }
+  50%      { transform: translateY(-8px) rotate(1.5deg); }
+}
+@keyframes tab-loading-pulse {
+  0%, 100% { opacity: 0.55; transform: translateX(-50%) scale(1); }
+  50%      { opacity: 0.95; transform: translateX(-50%) scale(1.08); }
+}
+.tab-loading-headline {
+  font-family: 'Google Sans Flex', ui-sans-serif, system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--slate);
+  margin: 0;
+}
+.tab-loading-text {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0;
+  min-height: 20px;
+  transition: opacity 0.35s ease;
+}
+.tab-loading-text.swapping { opacity: 0; }
+.tab-loading-bar {
+  width: min(280px, 60%);
+  height: 4px;
+  background: rgba(38, 78, 222, 0.10);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+  margin-top: 6px;
+}
+.tab-loading-bar::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 35%;
+  background: linear-gradient(90deg, transparent, var(--blue), transparent);
+  border-radius: 999px;
+  animation: tab-loading-bar-slide 1.6s ease-in-out infinite;
+}
+@keyframes tab-loading-bar-slide {
+  0%   { left: -35%; }
+  100% { left: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tab-loading-rex img,
+  .tab-loading-rex::before,
+  .tab-loading-bar::after { animation: none; }
 }
 
 /* Full-terms reference table — grouped, striped, monospace values. */

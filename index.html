@@ -43,6 +43,11 @@
       href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@8..36,400;8..36,500;8..36,600;8..36,700&family=JetBrains+Mono:wght@400;500&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap"
       rel="stylesheet"
     />
+    <!-- Preload the rex WebP poses — used by the homepage hero, the
+         post-payment generating-loader, and the panel-tier trio. -->
+    <link rel="preload" href="/assets/rex.webp" as="image" type="image/webp" fetchpriority="high" />
+    <link rel="preload" href="/assets/rex-concern.webp" as="image" type="image/webp" />
+    <link rel="preload" href="/assets/rex-cheer.webp" as="image" type="image/webp" />
     <link rel="stylesheet" href="/styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/@polar-sh/checkout@0.2.0/dist/embed.global.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>

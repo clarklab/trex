@@ -14,6 +14,7 @@ import {
   renderPanelPane,
   friendlyDeepError,
   escapeHtml,
+  mountTabLoader,
 } from "/js/render.js";
 import { mountInlineChat } from "/js/chat.js";
 
@@ -61,6 +62,20 @@ async function init() {
   setupDownloadActions();
   document.addEventListener("overlay:exit", () => activateTab("report"));
 
+  // Friendly rex-themed loader while /api/r/<code> resolves. Pre-loaded
+  // WebPs in <head> mean this animates instantly — no "loader is loading."
+  const initialTarget = $("r-report-content");
+  const stopInitialLoader = mountTabLoader(initialTarget, {
+    headline: "Pulling up your report",
+    messages: [
+      "Looking up your contract review…",
+      "Loading every flag and finding…",
+      "Almost there…",
+    ],
+    intervalMs: 1800,
+    pose: "/assets/rex.webp",
+  });
+
   let data;
   try {
     const res = await fetch("/api/r/" + encodeURIComponent(code));
@@ -74,10 +89,12 @@ async function init() {
     }
     data = await res.json();
   } catch (err) {
+    stopInitialLoader();
     insertLoaderInto("r-report-content");
     showLoaderError("single", err.message || "Failed to load report.");
     return;
   }
+  stopInitialLoader();
 
   state.data = data;
   state.jobId = data.job_id;

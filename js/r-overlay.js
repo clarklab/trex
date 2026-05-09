@@ -17,7 +17,16 @@ export async function mount(container, ctx) {
 
   container.innerHTML = `
     <div class="overlay-viewer" id="overlay-viewer">
-      <div class="overlay-loading">Loading overlay viewer…</div>
+      <div class="overlay-loading" id="overlay-loading">
+        <div class="tab-loading">
+          <div class="tab-loading-rex">
+            <img src="/assets/rex.webp" alt="" width="160" height="160" />
+          </div>
+          <h3 class="tab-loading-headline">Loading overlay viewer</h3>
+          <p class="tab-loading-text" id="overlay-loading-text">Pulling your contract from storage…</p>
+          <div class="tab-loading-bar" aria-hidden="true"></div>
+        </div>
+      </div>
       <div class="overlay-stage" hidden>
         <div class="overlay-layout">
           <div class="overlay-page-col">
@@ -72,6 +81,26 @@ export async function mount(container, ctx) {
     </div>
   `;
 
+  // Cycle the loader status text while pdfjs + the user PDF download.
+  // Cleared once the stage is shown.
+  const loadingTextEl = document.getElementById("overlay-loading-text");
+  const loadingMessages = [
+    "Pulling your contract from storage…",
+    "Loading the comparison engine…",
+    "Rendering page 1…",
+    "Almost there…",
+  ];
+  let loadingIdx = 0;
+  const loadingTimer = setInterval(() => {
+    if (!loadingTextEl) return;
+    loadingIdx = (loadingIdx + 1) % loadingMessages.length;
+    loadingTextEl.classList.add("swapping");
+    setTimeout(() => {
+      loadingTextEl.textContent = loadingMessages[loadingIdx];
+      loadingTextEl.classList.remove("swapping");
+    }, 320);
+  }, 1800);
+
   let pdfjs, manifest, pdf;
   try {
     let userPdfBuf;
@@ -93,6 +122,7 @@ export async function mount(container, ctx) {
     pdfjs.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_URL;
     pdf = await pdfjs.getDocument({ data: userPdfBuf }).promise;
   } catch (err) {
+    clearInterval(loadingTimer);
     container.innerHTML = `
       <div class="overlay-error">
         Couldn't load the overlay tool. ${escapeHtml(err.message || "Unknown error.")}
@@ -255,6 +285,7 @@ export async function mount(container, ctx) {
   // Initial render
   await renderPage(1);
 
+  clearInterval(loadingTimer);
   const loading = container.querySelector(".overlay-loading");
   if (loading) loading.remove();
   container.querySelector(".overlay-stage").hidden = false;
