@@ -11,6 +11,35 @@ let session = null;
 let stopPolling = null;
 let polarHandle = null;
 
+const PREWARM_TTL_MS = 30 * 60 * 1000;
+const prewarm = { single: null, panel: null };
+// each entry: { url, sessionId, recoveryCode, expiresAt }
+
+export function prewarmCheckouts(jobId) {
+  if (!jobId) return;
+  ["single", "panel"].forEach((tier) => {
+    if (prewarm[tier] && prewarm[tier].expiresAt > Date.now()) return;
+    fetch("/api/checkout-init", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ job_id: jobId, tier }),
+    })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (!data || !data.polar_checkout_url) return;
+        prewarm[tier] = {
+          url: data.polar_checkout_url,
+          sessionId: data.session_id,
+          recoveryCode: data.recovery_code,
+          expiresAt: Date.now() + PREWARM_TTL_MS,
+        };
+      })
+      .catch((err) => {
+        console.warn("prewarm " + tier + " failed:", err);
+      });
+  });
+}
+
 export async function openCheckout(jobId, tier, onPaid, onError) {
   resetState();
   const dialog = document.getElementById("checkout-dialog");
@@ -54,27 +83,45 @@ export async function openCheckout(jobId, tier, onPaid, onError) {
 
   // 2) Fetch checkout-init in the background. Only the card and LN paths
   //    depend on this — the coupon path is already wired up.
-  let initData;
-  try {
-    const res = await fetch("/api/checkout-init", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ job_id: jobId, tier }),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error || `checkout-init ${res.status}`);
+  //    Pre-warm cache hit: skip the network call entirely.
+  let initData = null;
+
+  const cached = prewarm[tier];
+  if (cached && cached.expiresAt > Date.now()) {
+    initData = {
+      session_id: cached.sessionId,
+      polar_checkout_url: cached.url,
+      recovery_code: cached.recoveryCode,
+      tier,
+      price_usd: tier === "panel" ? 12 : 5,
+      polar_checkout_id: null,
+      ln_available: false, // pre-warm doesn't include LN; LN tab loads lazily later
+    };
+    prewarm[tier] = null; // invalidate after first use (Polar checkouts are single-use)
+  }
+
+  if (!initData) {
+    try {
+      const res = await fetch("/api/checkout-init", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ job_id: jobId, tier }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `checkout-init ${res.status}`);
+      }
+      initData = await res.json();
+    } catch (err) {
+      // Don't blow away the dialog — the coupon path may still work.
+      const errEl = document.getElementById("card-error");
+      if (errEl) {
+        errEl.textContent = (err && err.message) || "Failed to initialize checkout";
+        errEl.hidden = false;
+      }
+      if (payBtn) payBtn.textContent = tier === "panel" ? "Pay $12 with card" : "Pay $5 with card";
+      return;
     }
-    initData = await res.json();
-  } catch (err) {
-    // Don't blow away the dialog — the coupon path may still work.
-    const errEl = document.getElementById("card-error");
-    if (errEl) {
-      errEl.textContent = (err && err.message) || "Failed to initialize checkout";
-      errEl.hidden = false;
-    }
-    if (payBtn) payBtn.textContent = tier === "panel" ? "Pay $12 with card" : "Pay $5 with card";
-    return;
   }
   session = initData;
 

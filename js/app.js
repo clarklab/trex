@@ -1,6 +1,6 @@
 import { uploadFile } from "/js/upload.js";
 import { pollJobStatus } from "/js/poll.js";
-import { openCheckout } from "/js/checkout.js";
+import { prewarmCheckouts, openCheckout } from "/js/checkout.js";
 import "/js/site.js";
 import {
   escapeHtml,
@@ -31,6 +31,7 @@ const state = {
   panelResults: { claude: null, gpt: null, gemini: null },
   stopJobPoll: null,
   demo: false,
+  prewarmFired: false,
 };
 
 const DEMO_STAGE1 = {
@@ -257,6 +258,7 @@ function resetAll() {
     stage1Status: "pending",
     stage2Status: "pending",
     stopJobPoll: null,
+    prewarmFired: false,
   });
   $("file-input").value = "";
   $("full-report").hidden = true;
@@ -440,6 +442,10 @@ function startJobPolling() {
             $("unlock-single-btn").hidden = false;
             $("unlock-panel-btn").hidden = false;
           }
+        }
+        if (s1 === "complete" && state.jobId && !state.prewarmFired) {
+          state.prewarmFired = true;
+          prewarmCheckouts(state.jobId);
         }
       }
       if (s1 === "error" && !state.stage1) {
