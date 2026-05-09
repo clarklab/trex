@@ -727,7 +727,7 @@ function buildModificationsSection(r) {
     const sorted = [...mods].sort(
       (a, b) => severityWeight(b.risk) - severityWeight(a.risk),
     );
-    sorted.forEach((m) => list.appendChild(buildModCard(m)));
+    sorted.forEach((m, i) => list.appendChild(buildModCard(m, i + 1)));
   }
   section.appendChild(list);
 
@@ -741,22 +741,39 @@ function severityWeight(risk) {
   return 1;
 }
 
-function buildModCard(m) {
+function buildModCard(m, index) {
   const risk = String(m.risk || "low").toLowerCase();
   const riskClass = risk === "med" ? "medium" : risk;
   const card = document.createElement("article");
   card.className = `mod-card risk-${riskClass}`;
 
-  // Header: badge + clause title
+  // Head: numbered prefix + risk badge + (priority icon for high) + clause.
+  // Sits inside its own bar with a hairline divider — no colored card edge.
   const head = document.createElement("div");
   head.className = "mod-head";
+  const numStr = typeof index === "number" ? String(index).padStart(2, "0") : "";
+  const numHtml = numStr
+    ? `<span class="mod-num" aria-hidden="true">${numStr}</span>`
+    : "";
+  // Only high-severity items get the extra priority icon — keeps medium/low
+  // visually quiet so high stands out in a long list.
+  const priorityIcon =
+    riskClass === "high"
+      ? '<span class="msym mod-clause-icon" aria-hidden="true">priority_high</span>'
+      : "";
   head.innerHTML =
+    numHtml +
     `<span class="risk-badge risk-${riskClass}">` +
     '<span class="pip" aria-hidden="true"></span>' +
     `<span>${escapeHtml(riskClass.toUpperCase())}</span>` +
     "</span>" +
+    priorityIcon +
     `<span class="mod-clause">${escapeHtml(m.clause || "")}</span>`;
   card.appendChild(head);
+
+  // Body wrapper — keeps padding control separate from the head.
+  const body = document.createElement("div");
+  body.className = "mod-body";
 
   // Compare panels
   if (m.standard_text || m.contract_text) {
@@ -778,7 +795,7 @@ function buildModCard(m) {
         `<span>${escapeHtml(m.contract_text)}</span>`;
       cmp.appendChild(b);
     }
-    card.appendChild(cmp);
+    body.appendChild(cmp);
   }
 
   // Explanation
@@ -786,7 +803,7 @@ function buildModCard(m) {
     const p = document.createElement("p");
     p.className = "mod-explanation";
     p.textContent = m.explanation;
-    card.appendChild(p);
+    body.appendChild(p);
   }
 
   // Questions to ask — collapsible
@@ -805,9 +822,10 @@ function buildModCard(m) {
       ul.appendChild(li);
     });
     det.appendChild(ul);
-    card.appendChild(det);
+    body.appendChild(det);
   }
 
+  card.appendChild(body);
   return card;
 }
 
