@@ -1880,3 +1880,124 @@ dialog .close:hover { color: var(--slate); }
     animation: none;
   }
 }
+
+/* Standalone /r/<code> dashboard */
+.r-page {
+  background: #FFFFFF;
+  min-height: 100vh;
+}
+.r-header {
+  padding: 22px 32px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.r-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--slate);
+}
+.r-main {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 28px 24px 80px;
+}
+.r-disclaimer {
+  background: #FFF8EE;
+  border: 1px solid #F5DDB6;
+  color: #8B5A18;
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+.r-disclaimer strong { color: #6B4310; }
+
+.r-share {
+  margin-bottom: 28px;
+}
+.r-share-label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.r-share-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.r-share-input {
+  flex: 1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  background: #FAFBFD;
+  color: var(--slate);
+  min-width: 0;
+}
+.r-share-input:focus { outline: none; border-color: var(--blue); background: #fff; }
+
+.r-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--hair);
+  margin-bottom: 24px;
+}
+.r-tab {
+  background: none;
+  border: 0;
+  padding: 12px 20px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.r-tab:hover { color: var(--slate); }
+.r-tab.active {
+  color: var(--blue);
+  border-bottom-color: var(--blue);
+  font-weight: 600;
+}
+.r-tab[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.r-tab-pane[hidden] { display: none; }
+
+.r-footer-meta {
+  margin-top: 40px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--hair);
+  color: var(--muted);
+  font-size: 12.5px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+}
+
+.r-paid-toast {
+  background: #E8F5E8;
+  border: 1px solid #B5D8B5;
+  color: #1B6E3D;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 13.5px;
+  margin-bottom: 16px;
+  animation: r-toast-in 0.4s ease;
+}
+@keyframes r-toast-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
