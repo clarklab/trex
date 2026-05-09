@@ -144,7 +144,7 @@ body {
 .hero .copy { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
 .mascot {
   width: 280px; height: 280px;
-  background: url('/assets/rex.png') center/contain no-repeat;
+  background: url('/assets/rex.webp') center/contain no-repeat;
   animation: bob 4.5s ease-in-out infinite;
   transform-origin: center bottom;
 }

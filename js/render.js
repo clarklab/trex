@@ -34,9 +34,9 @@ export function friendlyDeepError(rawError) {
 
 // generating-loader controller — module-private state.
 const REX_POSES = [
-  "/assets/rex.png",
-  "/assets/rex-concern.png",
-  "/assets/rex-cheer.png",
+  "/assets/rex.webp",
+  "/assets/rex-concern.webp",
+  "/assets/rex-cheer.webp",
 ];
 const SINGLE_LOADER_MESSAGES = [
   "Reading every paragraph carefully…",
@@ -86,7 +86,7 @@ export function showGeneratingLoader(tier) {
     if (panel) panel.hidden = true;
     if (headline) headline.textContent = "Generating your full report…";
     const hero = document.getElementById("rex-hero");
-    if (hero) hero.src = "/assets/rex.png";
+    if (hero) hero.src = "/assets/rex.webp";
     startHeroPoseCycle();
   }
   loader.hidden = false;
@@ -136,7 +136,7 @@ export function showLoaderError(tier, message) {
     document.querySelectorAll(".rex-trio-img").forEach((img) => {
       const trioCard = img.closest(".rex-trio-card");
       if (trioCard && !trioCard.classList.contains("is-done")) {
-        img.src = "/assets/rex-concern.png";
+        img.src = "/assets/rex-concern.webp";
       }
     });
   } else {
@@ -144,7 +144,7 @@ export function showLoaderError(tier, message) {
     if (panel) panel.hidden = true;
     const hero = document.getElementById("rex-hero");
     if (hero) {
-      hero.src = "/assets/rex-concern.png";
+      hero.src = "/assets/rex-concern.webp";
       hero.classList.remove("swapping");
     }
   }
@@ -197,7 +197,7 @@ export function setPanelLoaderStatus(model, status) {
   } else if (status === "complete") {
     stateEl.textContent = "Done";
     card.classList.add("is-done");
-    if (img) img.src = "/assets/rex-cheer.png";
+    if (img) img.src = "/assets/rex-cheer.webp";
   } else if (status === "error") {
     stateEl.textContent = "Failed";
     card.classList.remove("is-done");
