@@ -109,7 +109,13 @@ export async function mount(container, ctx) {
   stack.style.maxWidth = manifest.width + "px";
   stack.style.aspectRatio = `${manifest.width} / ${manifest.height}`;
 
-  const totalPages = pdf.numPages;
+  // Cap to whichever is smaller: the user's PDF or the blank reference.
+  // Pages beyond the standard form (addenda, disclosures, attachments)
+  // can't be overlaid — there's no reference to compare against.
+  const referencePages = manifest.page_count;
+  const userPages = pdf.numPages;
+  const totalPages = Math.min(userPages, referencePages);
+  const extraPages = Math.max(0, userPages - referencePages);
   let currentPage = 1;
   const pageCache = new Map();
 
@@ -230,6 +236,21 @@ export async function mount(container, ctx) {
     document.getElementById("ov-scale").value = "1";
     onAlignChange();
   };
+
+  // If the user's PDF has pages beyond the standard form, show a note
+  // in the controls column. Those pages are addenda — they can't be
+  // overlaid against the standard form.
+  if (extraPages > 0) {
+    const note = document.createElement("p");
+    note.className = "overlay-extra-note";
+    note.innerHTML =
+      '<span class="msym" aria-hidden="true">info</span>' +
+      `<span>Your contract has <strong>${extraPages}</strong> additional ` +
+      `page${extraPages === 1 ? "" : "s"} beyond the standard form ` +
+      "(addenda, disclosures). Those aren't part of the standard 20-18, " +
+      "so they're not shown here.</span>";
+    container.querySelector(".overlay-controls-col").appendChild(note);
+  }
 
   // Initial render
   await renderPage(1);
