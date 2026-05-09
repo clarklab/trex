@@ -40,6 +40,27 @@ export default async (req: Request, _context: Context) => {
     }
   }
 
+  if (format === "contract") {
+    if (!isPaid) {
+      return new Response("Forbidden", { status: 403 });
+    }
+    if (!job.blobKey) {
+      return Response.json({ error: "Contract not found" }, { status: 404 });
+    }
+    const uploads = getStore("uploads");
+    const pdf = await uploads.get(job.blobKey, { type: "arrayBuffer" });
+    if (!pdf) {
+      return Response.json({ error: "Contract missing" }, { status: 404 });
+    }
+    return new Response(pdf, {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": 'attachment; filename="your-contract.pdf"',
+        "Cache-Control": "private, no-store",
+      },
+    });
+  }
+
   if (format === "pdf") {
     if (!isPaid) {
       return new Response("Forbidden", { status: 403 });

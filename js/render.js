@@ -153,7 +153,36 @@ export function showLoaderError(tier, message) {
 
   const retryBtn = document.getElementById("generating-retry");
   if (retryBtn) {
-    retryBtn.onclick = () => window.location.reload();
+    retryBtn.onclick = async () => {
+      // If we're on a /r/<code> dashboard, do a real backend retry.
+      // Otherwise (upload page), just reload.
+      const segs = window.location.pathname.split("/").filter(Boolean);
+      if (segs[0] === "r" && segs[1]) {
+        const code = segs[1];
+        retryBtn.disabled = true;
+        retryBtn.textContent = "Retrying…";
+        try {
+          const res = await fetch("/api/retry", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ recovery_code: code }),
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || ("Retry failed (" + res.status + ")"));
+          }
+          // Success: reload the page so the polling picks up the now-pending state.
+          window.location.reload();
+        } catch (err) {
+          retryBtn.disabled = false;
+          retryBtn.textContent = "Try again";
+          const status = document.getElementById("generating-status");
+          if (status) status.textContent = "Retry failed: " + err.message;
+        }
+      } else {
+        window.location.reload();
+      }
+    };
   }
 }
 

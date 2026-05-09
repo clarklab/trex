@@ -53,7 +53,7 @@ export async function mount(container, ctx) {
       fetch(
         "/api/report?id=" + encodeURIComponent(ctx.jobId) +
         "&token=" + encodeURIComponent(ctx.downloadToken) +
-        "&format=pdf"
+        "&format=contract"
       ).then(async (r) => {
         if (!r.ok) throw new Error("Couldn't fetch your contract PDF");
         return r.arrayBuffer();
