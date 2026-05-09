@@ -450,24 +450,25 @@ function buildSnapshotCard(r, stage1, formId, formName, downloadUrl) {
   // Actions
   const actions = document.createElement("div");
   actions.className = "snapshot-actions";
-  if (downloadUrl) {
-    const dl = document.createElement("a");
-    dl.className = "r-action primary";
-    dl.target = "_blank";
-    dl.rel = "noopener";
-    dl.href = downloadUrl;
-    dl.innerHTML =
-      '<span class="msym" aria-hidden="true">download</span>' +
-      "<span>Download PDF</span>";
-    actions.appendChild(dl);
-  }
+  // PDF download: rasterizes the current dashboard via html2pdf.js,
+  // delivered one-click as a real .pdf file. Wired in r.js via the
+  // [data-action="download-pdf"] click delegate.
+  const dl = document.createElement("button");
+  dl.type = "button";
+  dl.className = "r-action primary";
+  dl.dataset.action = "download-pdf";
+  dl.innerHTML =
+    '<span class="msym" aria-hidden="true">download</span>' +
+    '<span class="r-action-label">Download PDF</span>';
+  actions.appendChild(dl);
+
   const print = document.createElement("button");
   print.type = "button";
   print.className = "r-action ghost";
+  print.dataset.action = "print";
   print.innerHTML =
     '<span class="msym" aria-hidden="true">print</span>' +
     "<span>Print</span>";
-  print.onclick = () => window.print();
   actions.appendChild(print);
   card.appendChild(actions);
 

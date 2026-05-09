@@ -2505,15 +2505,31 @@ dialog .close:hover { color: var(--slate); }
   font-variation-settings: 'opsz' 20, 'wght' 600, 'FILL' 1, 'GRAD' 0;
 }
 
-/* Print: when headless Chromium renders the page to PDF, hide the
-   chrome (nav, share card, tabs) and let the report content flow as
-   pages. Section breaks become page breaks for readability. */
+/* Hide chrome (nav, share card, tabs) when generating a PDF — both
+   the @media print path AND the html2pdf.js path (which captures the
+   live DOM via html2canvas and doesn't honor print media queries).
+   Section breaks become page breaks for readability. */
+.is-printing .r-nav,
+.is-printing .share-card,
+.is-printing .r-tabs,
+.is-printing .r-paid-toast,
+.is-printing .r-tab-pane[data-pane="overlay"],
+.is-printing .r-tab-pane[data-pane="chat"],
+.is-printing .snapshot-actions,
+.is-printing .r-footer-meta,
+.is-printing #generating-loader,
+.is-printing .chat-fab,
+.is-printing .chat-panel { display: none !important; }
+.is-printing { background: #fff; }
+.is-printing .r-page-frame { padding-bottom: 0; }
+.is-printing .r-shell { gap: 18px; }
+
 @media print {
   body { background: #fff; }
   .r-nav, .share-card, .r-tabs, .r-paid-toast,
   .r-tab-pane[data-pane="overlay"],
   .r-tab-pane[data-pane="chat"],
-  .full-report-actions,
+  .full-report-actions, .snapshot-actions,
   #generating-loader { display: none !important; }
   .r-shell { gap: 18px; }
   .report-section, .report-snapshot {

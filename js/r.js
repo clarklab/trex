@@ -60,6 +60,7 @@ async function init() {
 
   setupTabs();
   setupShareCopy();
+  setupDownloadActions();
   document.addEventListener("overlay:exit", () => activateTab("report"));
 
   let data;
@@ -122,6 +123,89 @@ function setupShareCopy() {
     }
   };
   input.onclick = () => { input.select(); };
+}
+
+// Click-delegate the snapshot card's PDF / Print buttons. They're
+// rendered into the dashboard by render.js, so we listen at the document
+// level for `data-action` attributes rather than wiring listeners on
+// the dynamically-created elements.
+function setupDownloadActions() {
+  document.addEventListener("click", (e) => {
+    const target = e.target;
+    if (!target || !target.closest) return;
+    const dl = target.closest('[data-action="download-pdf"]');
+    if (dl) {
+      e.preventDefault();
+      downloadReportPdf(dl);
+      return;
+    }
+    const pr = target.closest('[data-action="print"]');
+    if (pr) {
+      e.preventDefault();
+      window.print();
+    }
+  });
+}
+
+// One-click PDF: capture the live dashboard via html2pdf.js (loaded
+// from CDN). The .is-printing body class hides nav/share/tabs so only
+// the report content is captured. Lengthy reports get tiled across
+// Letter pages; .mod-card and .report-section have page-break-inside
+// rules so cards don't split.
+async function downloadReportPdf(triggerEl) {
+  if (typeof window.html2pdf !== "function") {
+    console.error("html2pdf.js not loaded yet");
+    return;
+  }
+  const wrap = document.querySelector(".r-page-frame") || document.body;
+  const origLabel = triggerEl ? triggerEl.querySelector(".r-action-label")?.textContent : null;
+  if (triggerEl) {
+    triggerEl.disabled = true;
+    const lbl = triggerEl.querySelector(".r-action-label");
+    if (lbl) lbl.textContent = "Preparing…";
+  }
+
+  document.body.classList.add("is-printing");
+  // Force a paint so the print-state styles settle before html2canvas reads.
+  await new Promise((r) => requestAnimationFrame(() => r()));
+  await new Promise((r) => requestAnimationFrame(() => r()));
+
+  const formId = state.data?.stage1?.result?.form_id || "review";
+  const filename = `trec-${formId}-review.pdf`;
+
+  try {
+    await window.html2pdf().set({
+      margin: [10, 10, 12, 10],
+      filename,
+      image: { type: "jpeg", quality: 0.95 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        // Long pages — let html2canvas measure the full element height
+        windowWidth: wrap.scrollWidth,
+      },
+      jsPDF: {
+        unit: "mm",
+        format: "letter",
+        orientation: "portrait",
+      },
+      pagebreak: {
+        mode: ["css", "avoid-all"],
+        avoid: [".mod-card", ".report-snapshot", ".terms-group", ".report-flags"],
+      },
+    }).from(wrap).save();
+  } catch (err) {
+    console.error("PDF generation failed:", err);
+    alert("Couldn't generate the PDF — try the Print button instead.");
+  } finally {
+    document.body.classList.remove("is-printing");
+    if (triggerEl) {
+      triggerEl.disabled = false;
+      const lbl = triggerEl.querySelector(".r-action-label");
+      if (lbl && origLabel) lbl.textContent = origLabel;
+    }
+  }
 }
 
 function setupTabs() {
