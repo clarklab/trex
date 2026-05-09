@@ -760,6 +760,157 @@ h1 em { font-style: normal; color: var(--blue); }
 .card h3 { font-size: 16px; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.01em; }
 .card p { font-size: 14px; color: var(--muted); line-height: 1.55; margin: 0; }
 
+/* =============================================================
+   Homepage features grid — three product-style cards with animated
+   SVG pictograms. Each card sells one of the three flagship views:
+   Instant Contract Scan, Visual Comparison, Live Contract Chat.
+   ============================================================= */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+@media (max-width: 880px) {
+  .features-grid { grid-template-columns: 1fr; }
+}
+.feature-card {
+  background: var(--white);
+  border: 1px solid var(--hair);
+  border-radius: var(--radius-lg);
+  padding: 28px 28px 24px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: border-color .18s ease, transform .18s ease, box-shadow .2s ease;
+}
+.feature-card:hover {
+  border-color: #C9D2E0;
+  transform: translate3d(0, -2px, 0);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+.feature-pictogram {
+  background: linear-gradient(180deg, #F5F8FF 0%, #EAF1FF 100%);
+  border: 1px solid #E1E8FE;
+  border-radius: var(--radius);
+  padding: 18px;
+  margin: -8px -8px 22px;
+  aspect-ratio: 16 / 11;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  position: relative;
+}
+.feature-pictogram svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.feature-eyebrow {
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin-bottom: 8px;
+}
+.feature-card h3 {
+  font-family: 'Google Sans Flex', ui-sans-serif, system-ui, sans-serif;
+  font-size: 22px; line-height: 1.15; letter-spacing: -0.02em;
+  font-weight: 600;
+  color: var(--slate);
+  margin: 0 0 12px;
+  text-wrap: balance;
+}
+.feature-card p {
+  font-size: 14.5px; line-height: 1.55; color: var(--muted);
+  margin: 0 0 18px;
+  text-wrap: pretty;
+  flex: 1;
+}
+.feature-cta {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600;
+  color: var(--blue);
+  text-decoration: none;
+  align-self: flex-start;
+  padding: 4px 0;
+  transition: gap .15s ease;
+}
+.feature-cta svg {
+  transition: transform .15s ease;
+}
+.feature-cta:hover { color: #1d54c9; }
+.feature-cta:hover svg { transform: translateX(2px); }
+
+/* ---- Pictogram animations ---- */
+
+/* SCAN: a horizontal beam slides down the document, looping. The
+   gradient gives the beam a soft glowing edge; a thin solid edge
+   line at its top makes the leading edge crisp. */
+.feature-scan .scan-beam {
+  animation: feature-scan-beam 3.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+.feature-scan .scan-edge {
+  animation: feature-scan-edge 3.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+.feature-scan .scan-flag {
+  opacity: 0;
+  animation: feature-scan-flag 3.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+.feature-scan .scan-flag-2 { animation-delay: 0.6s; }
+@keyframes feature-scan-beam {
+  0%   { transform: translateY(0); opacity: 0; }
+  10%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: translateY(98px); opacity: 0; }
+}
+@keyframes feature-scan-edge {
+  0%   { transform: translateY(0); opacity: 0; }
+  10%  { opacity: 0.95; }
+  85%  { opacity: 0.95; }
+  100% { transform: translateY(98px); opacity: 0; }
+}
+@keyframes feature-scan-flag {
+  0%, 35%   { opacity: 0; transform: scale(0.6); }
+  45%, 80%  { opacity: 1; transform: scale(1); }
+  100%      { opacity: 1; transform: scale(1); }
+}
+
+/* OVERLAY: front document gently slides L↔R across the back document,
+   reading as "compare". */
+.feature-overlay .cmp-front {
+  animation: feature-overlay-slide 5.4s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes feature-overlay-slide {
+  0%, 100% { transform: translateX(-6px); }
+  50%      { transform: translateX(6px); }
+}
+
+/* CHAT: typing dots bounce with staggered delays, classic "is typing"
+   indicator. */
+.feature-chat .chat-dot {
+  animation: feature-chat-dot 1.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+.feature-chat .chat-dot-2 { animation-delay: 0.18s; }
+.feature-chat .chat-dot-3 { animation-delay: 0.36s; }
+@keyframes feature-chat-dot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.45; }
+  30%           { transform: translateY(-3px); opacity: 1; }
+}
+
+/* Reduce motion respects user preference. */
+@media (prefers-reduced-motion: reduce) {
+  .feature-scan .scan-beam,
+  .feature-scan .scan-edge,
+  .feature-scan .scan-flag,
+  .feature-overlay .cmp-front,
+  .feature-chat .chat-dot {
+    animation: none;
+  }
+  .feature-scan .scan-beam,
+  .feature-scan .scan-edge { opacity: 0; }
+}
+
 /* SEO form farm */
 .farm {
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
