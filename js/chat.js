@@ -31,25 +31,86 @@ export function initChat({ delayMs = REVEAL_DELAY_MS, jobContext: jc } = {}) {
   initialized = true;
   if (jc !== undefined) jobContext = jc;
 
-  injectMarkup();
+  injectMarkup({ withFab: true });
   attachEvents();
   loadHistory();
 
   if (revealTimer) clearTimeout(revealTimer);
   revealTimer = setTimeout(() => {
-    requestAnimationFrame(() => dom.fab.classList.add("show"));
+    requestAnimationFrame(() => dom.fab && dom.fab.classList.add("show"));
   }, delayMs);
 }
 
-function injectMarkup() {
-  const wrap = document.createElement("div");
-  wrap.innerHTML = `
+// Mount the chat panel inline inside a container element. Used by the
+// /r/<code> dashboard's Chat tab — there's no floating FAB on this
+// page; the chat is a primary surface in the tab pane itself.
+//
+// Multiple-mount safe: if mounted before, simply moves the existing
+// panel into the new container (chat history stays intact).
+export function mountInlineChat(container, { jobContext: jc } = {}) {
+  if (jc !== undefined) jobContext = jc;
+  if (!initialized) {
+    initialized = true;
+    injectMarkup({ withFab: false, container });
+    attachEvents();
+    loadHistory();
+  } else if (dom && dom.panel) {
+    // Already initialized somewhere else (e.g. upload page also mounts it).
+    // Move it into the new container without re-rendering history.
+    if (dom.panel.parentElement !== container) {
+      container.appendChild(dom.panel);
+    }
+  }
+  if (dom && dom.panel) {
+    dom.panel.classList.add("is-inline");
+    dom.panel.classList.add("open");
+  }
+  // Hide the floating FAB while the inline chat is showing — only one
+  // chat surface should be visible at a time.
+  if (dom && dom.fab) {
+    dom.fab.classList.remove("show");
+    dom.fab.style.display = "none";
+  }
+}
+
+// Reverse of mountInlineChat — restore the floating FAB and detach
+// the panel from the inline container. Called by r.js when the user
+// switches away from the Chat tab.
+export function unmountInlineChat() {
+  if (!dom || !dom.panel) return;
+  dom.panel.classList.remove("is-inline");
+  dom.panel.classList.remove("open");
+  if (dom.panel.parentElement !== document.body) {
+    document.body.appendChild(dom.panel);
+  }
+  if (dom.fab) {
+    dom.fab.style.display = "";
+    // Don't auto-show; user needs to engage. The fab.show class controls
+    // visibility — leave whatever state it was in.
+  }
+}
+
+function injectMarkup({ withFab = true, container = null } = {}) {
+  const fabHtml = withFab
+    ? `
     <button class="chat-fab" id="chat-fab" aria-label="Chat with T-REX">
       <span class="fab-pulse" aria-hidden="true"></span>
       <span class="fab-avatar" aria-hidden="true"></span>
       <span class="fab-tooltip">Ask the T-REX</span>
-    </button>
+    </button>`
+    : "";
 
+  const closeHtml = withFab
+    ? `<button class="close" id="chat-close" aria-label="Close chat">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 6l12 12M18 6l-12 12"/>
+        </svg>
+      </button>`
+    : "";
+
+  const wrap = document.createElement("div");
+  wrap.innerHTML = `
+    ${fabHtml}
     <div class="chat-panel" id="chat-panel" role="dialog" aria-label="T-REX LAWYER chat">
       <div class="chat-header">
         <div class="avatar" aria-hidden="true"></div>
@@ -57,11 +118,7 @@ function injectMarkup() {
           <div class="name">T-REX LAWYER</div>
           <div class="status">Online · friendly cartoon dinosaur</div>
         </div>
-        <button class="close" id="chat-close" aria-label="Close chat">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M6 6l12 12M18 6l-12 12"/>
-          </svg>
-        </button>
+        ${closeHtml}
       </div>
 
       <div class="chat-messages" id="chat-messages" aria-live="polite"></div>
@@ -86,7 +143,14 @@ function injectMarkup() {
       </div>
     </div>
   `;
-  document.body.append(...wrap.children);
+
+  // Inline mode: place the panel inside the container; no FAB.
+  if (container) {
+    const panel = wrap.querySelector(".chat-panel");
+    container.appendChild(panel);
+  } else {
+    document.body.append(...wrap.children);
+  }
 
   dom = {
     fab: document.getElementById("chat-fab"),
@@ -99,8 +163,10 @@ function injectMarkup() {
 }
 
 function attachEvents() {
-  dom.fab.addEventListener("click", openChat);
-  dom.close.addEventListener("click", closeChat);
+  // FAB and close button only exist in floating mode (initChat). Inline
+  // mode (mountInlineChat) skips them — guard each binding.
+  if (dom.fab) dom.fab.addEventListener("click", openChat);
+  if (dom.close) dom.close.addEventListener("click", closeChat);
 
   dom.input.addEventListener("input", () => {
     dom.send.disabled = !dom.input.value.trim() || streaming;
@@ -115,7 +181,12 @@ function attachEvents() {
   dom.send.addEventListener("click", sendMessage);
 
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && dom.panel.classList.contains("open")) {
+    // Esc only closes the floating panel, never the inline one.
+    if (
+      e.key === "Escape" &&
+      dom.panel.classList.contains("open") &&
+      !dom.panel.classList.contains("is-inline")
+    ) {
       closeChat();
     }
   });

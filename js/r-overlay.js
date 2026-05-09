@@ -19,24 +19,55 @@ export async function mount(container, ctx) {
     <div class="overlay-viewer" id="overlay-viewer">
       <div class="overlay-loading">Loading overlay viewer…</div>
       <div class="overlay-stage" hidden>
-        <div class="overlay-labels">
-          <div class="overlay-label overlay-label-user">Your Contract</div>
-          <div class="overlay-label overlay-label-blank">Blank Original</div>
+        <div class="overlay-layout">
+          <div class="overlay-page-col">
+            <div class="overlay-labels">
+              <div class="overlay-label overlay-label-user">Your Contract</div>
+              <div class="overlay-label overlay-label-blank">Blank Original</div>
+            </div>
+            <div class="overlay-stack" id="overlay-stack">
+              <img class="overlay-img-blank" id="overlay-blank" alt="" />
+              <img class="overlay-img-user"  id="overlay-user"  alt="" />
+            </div>
+          </div>
+
+          <aside class="overlay-controls-col">
+            <div class="overlay-control-card">
+              <div class="overlay-control-card-head">
+                <span class="msym" aria-hidden="true">tune</span>
+                <span>Compare</span>
+              </div>
+              <input type="range" min="0" max="100" value="100" id="overlay-slider" class="overlay-slider" />
+              <div class="overlay-slider-axis">
+                <span>Blank</span>
+                <span>Yours</span>
+              </div>
+              <button class="overlay-autoflip" id="overlay-autoflip" type="button" aria-pressed="false">
+                <span class="msym overlay-autoflip-icon" aria-hidden="true">sync</span>
+                <span class="overlay-autoflip-label">Auto-flip</span>
+              </button>
+              <p class="overlay-control-hint">Drag · press <kbd>F</kbd> to flip</p>
+            </div>
+
+            <div class="overlay-control-card">
+              <div class="overlay-control-card-head">
+                <span class="msym" aria-hidden="true">menu_book</span>
+                <span>Pages</span>
+              </div>
+              <div class="overlay-nav">
+                <button class="overlay-nav-btn" id="overlay-prev" aria-label="Previous page">
+                  <span class="msym" aria-hidden="true">chevron_left</span>
+                </button>
+                <span class="overlay-nav-page" id="overlay-page-indicator">Page 1 of …</span>
+                <button class="overlay-nav-btn" id="overlay-next" aria-label="Next page">
+                  <span class="msym" aria-hidden="true">chevron_right</span>
+                </button>
+              </div>
+              <div class="overlay-thumbs" id="overlay-thumbs"></div>
+              <p class="overlay-control-hint">← → arrow keys also work</p>
+            </div>
+          </aside>
         </div>
-        <div class="overlay-stack" id="overlay-stack">
-          <img class="overlay-img-blank" id="overlay-blank" alt="" />
-          <img class="overlay-img-user"  id="overlay-user"  alt="" />
-        </div>
-        <div class="overlay-slider-row">
-          <label class="overlay-slider-hint">Drag to compare · press F to flip · ← → for pages</label>
-          <input type="range" min="0" max="100" value="100" id="overlay-slider" />
-        </div>
-        <div class="overlay-nav">
-          <button class="overlay-nav-btn" id="overlay-prev">‹ Prev</button>
-          <span class="overlay-nav-page" id="overlay-page-indicator">Page 1 of …</span>
-          <button class="overlay-nav-btn" id="overlay-next">Next ›</button>
-        </div>
-        <div class="overlay-thumbs" id="overlay-thumbs"></div>
       </div>
     </div>
   `;
@@ -135,13 +166,16 @@ export async function mount(container, ctx) {
     thumbs.appendChild(btn);
   }
 
-  // Manual alignment nudge controls — appended to the stage and persisted
-  // per-job in localStorage. Lets users compensate for misalignment when
-  // their user PDF doesn't exactly line up with the standard form (scanned,
-  // slightly different DPI, etc.).
-  container.querySelector(".overlay-stage").insertAdjacentHTML("beforeend", `
+  // Manual alignment nudge controls — appended to the controls column and
+  // persisted per-job in localStorage. Lets users compensate for misalignment
+  // when their user PDF doesn't line up exactly with the standard form
+  // (scanned, slightly different DPI, etc.).
+  container.querySelector(".overlay-controls-col").insertAdjacentHTML("beforeend", `
     <details class="overlay-align">
-      <summary>Adjust alignment</summary>
+      <summary>
+        <span class="msym" aria-hidden="true">tune</span>
+        <span>Adjust alignment</span>
+      </summary>
       <div class="overlay-align-controls">
         <label>X offset
           <input type="range" min="-20" max="20" step="1" value="0" id="ov-off-x" />
@@ -210,8 +244,48 @@ export async function mount(container, ctx) {
   const onSlide = () => {
     viewer.style.setProperty("--mix", String(slider.value / 100));
   };
-  slider.addEventListener("input", onSlide);
+  slider.addEventListener("input", () => {
+    // Manual interaction stops auto-flip.
+    stopAutoFlip();
+    onSlide();
+  });
   onSlide();
+
+  // Auto-flip: hands-free side-to-side animation. Toggling the button
+  // adds .is-autoflip to the viewer (which lengthens the user-image
+  // opacity transition) and bounces the slider between 0 and 100 every
+  // ~1300ms. Click again or grab the slider to stop.
+  const autoBtn = document.getElementById("overlay-autoflip");
+  const autoLabel = autoBtn.querySelector(".overlay-autoflip-label");
+  let autoflipTimer = null;
+  function startAutoFlip() {
+    if (autoflipTimer) return;
+    viewer.classList.add("is-autoflip");
+    autoBtn.setAttribute("aria-pressed", "true");
+    autoBtn.classList.add("is-on");
+    if (autoLabel) autoLabel.textContent = "Stop auto-flip";
+    let target = slider.value === "0" ? 100 : 0;
+    const step = () => {
+      slider.value = String(target);
+      onSlide();
+      target = target === 0 ? 100 : 0;
+    };
+    step();
+    autoflipTimer = setInterval(step, 1300);
+  }
+  function stopAutoFlip() {
+    if (!autoflipTimer) return;
+    clearInterval(autoflipTimer);
+    autoflipTimer = null;
+    viewer.classList.remove("is-autoflip");
+    autoBtn.setAttribute("aria-pressed", "false");
+    autoBtn.classList.remove("is-on");
+    if (autoLabel) autoLabel.textContent = "Auto-flip";
+  }
+  autoBtn.addEventListener("click", () => {
+    if (autoflipTimer) stopAutoFlip();
+    else startAutoFlip();
+  });
 
   // Prev/Next
   document.getElementById("overlay-prev").onclick = () => {
@@ -236,6 +310,7 @@ export async function mount(container, ctx) {
     if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
     if (e.key === "f" || e.key === "F") {
       e.preventDefault();
+      stopAutoFlip();
       flipped = !flipped;
       slider.value = flipped ? 0 : 100;
       onSlide();

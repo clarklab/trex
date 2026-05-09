@@ -15,13 +15,11 @@ import {
   friendlyDeepError,
   escapeHtml,
 } from "/js/render.js";
-import { initChat } from "/js/chat.js";
+import { mountInlineChat } from "/js/chat.js";
 
-// The floating chat FAB is mounted lazily once the dashboard data
-// resolves — see init() / pollResolveLoop() below. We delay the call so
-// we can pass `jobContext` (real numbers from this contract) to the
-// chat widget; without it the AI has no idea what report it's
-// answering questions about.
+// On the dashboard, chat is a primary in-page surface (the Chat tab),
+// not a floating FAB. mountInlineChat is called the first time the
+// user clicks the Chat tab — see loadChatTab() below.
 
 const $ = (id) => document.getElementById(id);
 
@@ -96,9 +94,8 @@ async function init() {
 
   renderFooterMeta(data);
   gateOverlayTab(data);
-  if (state.paid) {
-    initChat({ delayMs: 0, jobContext: buildJobContext(data) });
-  }
+  // Chat is mounted lazily on Chat tab click (see loadChatTab). The
+  // jobContext is rebuilt every poll tick so the AI sees the latest data.
   renderReportTab();
 }
 
@@ -480,7 +477,16 @@ function pollResolveLoop() {
         // Refresh chat's job context so the AI sees newly arrived
         // stage2 / panel-model results.
         if (state.paid) {
-          initChat({ delayMs: 0, jobContext: buildJobContext(data) });
+          // Stash the latest context so loadChatTab uses fresh numbers
+          // when the user clicks Chat.
+          state.jobContext = buildJobContext(data);
+          // If the inline chat is already mounted, refresh it with new
+          // context. mountInlineChat is safe to call repeatedly.
+          if (state.chatLoaded) {
+            mountInlineChat(document.getElementById("r-chat-content"), {
+              jobContext: state.jobContext,
+            });
+          }
         }
         if (state.tier === "single" && data.stage2?.result) {
           stopped = true;
@@ -549,27 +555,20 @@ async function loadOverlayTab() {
 }
 
 async function loadChatTab() {
-  // Render every time it's clicked (no `chatLoaded` guard) — cheap, and
-  // keeps the open-chat button responsive even if it was rebuilt.
   const target = $("r-chat-content");
-  target.innerHTML =
-    '<div class="chat-placeholder" style="text-align:center;padding:60px 20px;color:var(--muted)">' +
-    '<p style="font-size:15px;margin-bottom:20px">' +
-    "Chat with the T-REX about this specific contract. " +
-    "I have the numbers, the modifications, and the analysis loaded — ask anything." +
-    "</p>" +
-    '<button class="btn primary" id="r-chat-open">💬 Open chat</button>' +
-    "</div>";
-  const btn = $("r-chat-open");
-  if (btn) {
-    btn.onclick = () => {
-      const fab = document.getElementById("chat-fab");
-      const panel = document.getElementById("chat-panel");
-      if (panel && !panel.classList.contains("open") && fab) {
-        fab.click();
-      }
-    };
+  if (!target) return;
+  if (!state.paid) {
+    target.innerHTML =
+      '<p class="rich-foot-note">Pay to unlock the chat.</p>';
+    return;
   }
+  // Mount the chat panel inline in this pane (no floating FAB on the
+  // dashboard). Safe to call repeatedly — second call moves the
+  // already-rendered panel back into our container if needed.
+  state.chatLoaded = true;
+  mountInlineChat(target, {
+    jobContext: state.jobContext || (state.data ? buildJobContext(state.data) : null),
+  });
 }
 
 // ---- Per-job context for the chat widget ----

@@ -1030,6 +1030,31 @@ footer a:hover { color: var(--slate); }
   opacity: 1;
   pointer-events: auto;
 }
+
+/* Inline mode — used inside the /r/<code> dashboard's Chat tab.
+   Panel becomes a tall in-page card instead of a floating window:
+   no fixed positioning, full container width, comfortable height. */
+.chat-panel.is-inline {
+  position: static;
+  width: 100%;
+  max-width: 100%;
+  height: min(calc(100vh - 220px), 760px);
+  max-height: none;
+  bottom: auto;
+  right: auto;
+  border: 1px solid var(--hair);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, .04);
+  transform: none;
+  opacity: 1;
+  pointer-events: auto;
+  z-index: auto;
+  transition: none;
+}
+.chat-panel.is-inline.open { transform: none; }
+.chat-panel.is-inline .chat-header {
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
 .chat-header {
   background: linear-gradient(135deg, #2563EB 0%, #1d54c9 100%);
   color: #fff;
@@ -2547,11 +2572,15 @@ dialog .close:hover { color: var(--slate); }
   .deal-cell-value { font-size: 18px; }
 }
 
-/* Visual overlay viewer (lazy-loaded inside /r/<code> dashboard) */
+/* =============================================================
+   Visual overlay viewer — lazy-loaded inside /r/<code> dashboard.
+   Two-column layout: page (left, sized to fit viewport) + controls
+   (right, sticky panel with slider, autoflip, thumbs, alignment).
+   ============================================================= */
+
 .overlay-viewer {
   --mix: 1;
   margin: 0 auto;
-  max-width: 1200px;
 }
 .overlay-loading,
 .overlay-error,
@@ -2565,33 +2594,66 @@ dialog .close:hover { color: var(--slate); }
 
 .overlay-stage[hidden] { display: none; }
 
+.overlay-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 24px;
+  align-items: start;
+}
+.overlay-page-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.overlay-controls-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: 16px;
+  align-self: start;
+}
+
 .overlay-labels {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 8px;
-  font-size: 12px;
-  letter-spacing: 0.06em;
+  width: 100%;
+  max-width: 100%;
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--muted);
 }
-.overlay-label-user  { opacity: var(--mix); transition: opacity 200ms ease; }
+.overlay-label-user  { opacity: var(--mix); transition: opacity 200ms ease; color: var(--blue); }
 .overlay-label-blank { opacity: calc(1 - var(--mix)); transition: opacity 200ms ease; }
 
+/* Page stack — sized so the entire page fits the viewport. Height
+   drives the size; width follows aspect-ratio. The container's
+   max-width keeps it from overflowing the column on narrow viewports. */
 .overlay-stack {
   position: relative;
-  margin: 0 auto;
   background: #fff;
-  box-shadow: 0 1px 8px rgba(0,0,0,0.08);
+  border: 1px solid var(--hair);
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.08);
+  height: min(calc(100vh - 220px), 1100px);
+  aspect-ratio: 1200 / 1553;
+  width: auto;
+  max-width: 100%;
+  flex-shrink: 0;
 }
 .overlay-stack img {
   position: absolute;
   inset: 0;
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: contain;
   user-select: none;
   -webkit-user-drag: none;
 }
-.overlay-stack img.overlay-img-blank { /* base layer, always full opacity */ }
 .overlay-stack img.overlay-img-user {
   opacity: var(--mix);
   transform: translate(var(--off-x, 0px), var(--off-y, 0px))
@@ -2599,106 +2661,249 @@ dialog .close:hover { color: var(--slate); }
   transform-origin: top left;
   transition: opacity 200ms ease;
 }
+.overlay-viewer.is-autoflip .overlay-img-user,
+.overlay-viewer.is-autoflip .overlay-label-user,
+.overlay-viewer.is-autoflip .overlay-label-blank {
+  transition: opacity 1100ms cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-.overlay-slider-row {
-  margin-top: 18px;
+/* Controls column — small section cards. */
+.overlay-control-card {
+  background: var(--white);
+  border: 1px solid var(--hair);
+  border-radius: 14px;
+  padding: 16px 18px 14px;
   display: flex;
   flex-direction: column;
+  gap: 12px;
+}
+.overlay-control-card-head {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-}
-.overlay-slider-row input[type="range"] {
-  width: 100%;
-  max-width: 600px;
-}
-.overlay-slider-hint {
-  font-size: 12.5px;
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   color: var(--muted);
 }
+.overlay-control-card-head .msym {
+  font-size: 13px;
+  color: var(--blue);
+  font-variation-settings: 'opsz' 20, 'wght' 600, 'FILL' 1, 'GRAD' 0;
+}
+.overlay-control-hint {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin: 0;
+}
+.overlay-control-hint kbd {
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 10.5px;
+  background: var(--gray);
+  border: 1px solid var(--hair);
+  border-radius: 4px;
+  padding: 0 5px;
+  color: var(--slate);
+}
 
+/* Slider — full width of its card, with axis labels. */
+.overlay-slider {
+  width: 100%;
+  accent-color: var(--blue);
+}
+.overlay-slider-axis {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: -4px;
+}
+
+/* Auto-flip toggle. */
+.overlay-autoflip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--white);
+  border: 1px solid var(--hair);
+  color: var(--slate);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 9px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.overlay-autoflip:hover { border-color: #C9D2E0; }
+.overlay-autoflip.is-on {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: var(--white);
+}
+.overlay-autoflip .msym {
+  font-size: 16px;
+  font-variation-settings: 'opsz' 20, 'wght' 600, 'FILL' 1, 'GRAD' 0;
+}
+.overlay-autoflip.is-on .overlay-autoflip-icon {
+  animation: overlay-spin 1.6s linear infinite;
+}
+@keyframes overlay-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Page nav + thumbnails — vertical strip in the controls column. */
 .overlay-nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 600px;
-  margin: 12px auto 0;
+  gap: 8px;
 }
 .overlay-nav-btn {
-  background: none;
+  display: inline-grid;
+  place-items: center;
+  background: var(--white);
   border: 1px solid var(--hair);
   border-radius: 8px;
-  padding: 6px 14px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
   font-family: inherit;
   font-size: 13px;
   cursor: pointer;
   color: var(--slate);
+  flex-shrink: 0;
 }
+.overlay-nav-btn .msym { font-size: 18px; line-height: 1; }
 .overlay-nav-btn:hover { border-color: #C9D2E0; }
-.overlay-nav-page { font-size: 13px; color: var(--muted); }
-
+.overlay-nav-page {
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 12px;
+  color: var(--slate-2);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  flex: 1;
+  text-align: center;
+}
 .overlay-thumbs {
   display: flex;
+  flex-direction: column;
   gap: 6px;
-  overflow-x: auto;
-  padding: 12px 4px;
-  margin-top: 12px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding: 4px;
+  background: var(--gray);
+  border-radius: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: #C9D2E0 transparent;
+}
+.overlay-thumbs::-webkit-scrollbar { width: 6px; }
+.overlay-thumbs::-webkit-scrollbar-thumb {
+  background: #C9D2E0;
+  border-radius: 4px;
 }
 .overlay-thumb {
   flex: 0 0 auto;
-  width: 80px;
-  background: none;
+  width: 100%;
+  background: var(--white);
   border: 2px solid transparent;
   border-radius: 6px;
   padding: 0;
   cursor: pointer;
   position: relative;
+  transition: border-color .12s, transform .12s;
 }
+.overlay-thumb:hover { transform: translate3d(0, -1px, 0); }
 .overlay-thumb img {
   display: block;
   width: 100%;
   height: auto;
   border-radius: 4px;
-  background: #fff;
+  background: var(--white);
 }
 .overlay-thumb span {
   position: absolute;
   top: 4px; left: 4px;
-  background: rgba(0,0,0,0.5);
+  background: rgba(15, 23, 42, 0.6);
   color: #fff;
-  font-size: 10px;
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 9.5px;
+  font-weight: 600;
   padding: 1px 5px;
   border-radius: 3px;
 }
 .overlay-thumb.is-active { border-color: var(--blue); }
+.overlay-thumb.is-active span { background: var(--blue); }
 
+/* Alignment-nudge details — collapsed by default in the controls column. */
 .overlay-align {
-  margin-top: 16px;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
+  background: var(--white);
+  border: 1px solid var(--hair);
+  border-radius: 14px;
+  padding: 12px 18px;
 }
 .overlay-align summary {
   cursor: pointer;
-  font-size: 12.5px;
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   color: var(--muted);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+}
+.overlay-align summary::-webkit-details-marker { display: none; }
+.overlay-align summary .msym {
+  font-size: 13px;
+  color: var(--blue);
+  font-variation-settings: 'opsz' 20, 'wght' 600, 'FILL' 1, 'GRAD' 0;
 }
 .overlay-align[open] summary { color: var(--slate); }
 .overlay-align-controls {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr auto;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
-  margin-top: 12px;
-  align-items: end;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--hair);
 }
 .overlay-align-controls label {
   display: flex;
   flex-direction: column;
-  font-size: 11.5px;
+  font-size: 11px;
   color: var(--muted);
   gap: 4px;
 }
-@media (max-width: 600px) {
-  .overlay-align-controls { grid-template-columns: 1fr 1fr; }
+.overlay-align-controls label input[type="range"] { accent-color: var(--blue); }
+.overlay-align-controls .overlay-nav-btn {
+  width: 100%;
+  height: auto;
+  padding: 6px 14px;
+}
+
+/* Mobile — stack vertically. Page first, controls below; thumbs go
+   horizontal so the panel doesn't get tall. */
+@media (max-width: 900px) {
+  .overlay-layout { grid-template-columns: 1fr; }
+  .overlay-controls-col { position: static; }
+  .overlay-thumbs {
+    flex-direction: row;
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 6px;
+  }
+  .overlay-thumb { width: 72px; flex-shrink: 0; }
+  .overlay-stack { height: min(70vh, 800px); }
 }
