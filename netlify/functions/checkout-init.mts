@@ -85,7 +85,7 @@ export default async (req: Request, _context: Context) => {
     try { return new URL(req.url).origin; } catch { return ""; }
   })();
   const successUrl = origin
-    ? `${origin}/?paid=1&session_id=${session.id}`
+    ? `${origin}/r/${recoveryCode}?paid=1`
     : undefined;
 
   const polarCheckout = await polar.checkouts.create({
