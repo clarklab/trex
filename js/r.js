@@ -15,6 +15,13 @@ import {
   friendlyDeepError,
   escapeHtml,
 } from "/js/render.js";
+import { initChat } from "/js/chat.js";
+
+// Inject the floating chat FAB on the dashboard. The widget is a fixed-
+// position bubble + panel that lives at <body> level — same one used on
+// the upload page (/), via /js/site.js. Reveal it immediately rather
+// than after the upload-page 10s delay since this page is post-upload.
+initChat({ delayMs: 0 });
 
 const $ = (id) => document.getElementById(id);
 
@@ -440,8 +447,23 @@ async function loadChatTab() {
   if (state.chatLoaded) return;
   state.chatLoaded = true;
   const target = $("r-chat-content");
+  // The chat widget is the floating FAB at the bottom-right (injected by
+  // initChat() at module load). The Chat tab is a friendly handoff that
+  // opens that same panel — keeps a single source of truth for the
+  // widget's DOM and history.
   target.innerHTML =
     '<div class="chat-placeholder" style="text-align:center;padding:60px 20px;color:var(--muted)">' +
-    "Chat is being wired up — coming soon." +
+    '<p style="margin-bottom:20px">Chat with the T-REX about TREC reviews, pricing, or how this report works.</p>' +
+    '<button class="btn primary" id="r-chat-open">💬 Open chat</button>' +
     "</div>";
+  const btn = $("r-chat-open");
+  if (btn) {
+    btn.onclick = () => {
+      const fab = document.getElementById("chat-fab");
+      const panel = document.getElementById("chat-panel");
+      if (panel && !panel.classList.contains("open")) {
+        if (fab) fab.click();
+      }
+    };
+  }
 }
