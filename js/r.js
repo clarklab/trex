@@ -437,10 +437,21 @@ async function loadOverlayTab() {
   if (state.overlayLoaded) return;
   state.overlayLoaded = true;
   const target = $("r-overlay-content");
-  target.innerHTML =
-    '<div class="overlay-placeholder" style="text-align:center;padding:60px 20px;color:var(--muted)">' +
-    "Overlay viewer is being built — coming soon." +
-    "</div>";
+  if (!state.paid || !state.downloadToken) {
+    target.innerHTML = '<p class="rich-foot-note">Pay to unlock the visual overlay.</p>';
+    return;
+  }
+  try {
+    const mod = await import("/js/r-overlay.js");
+    await mod.mount(target, {
+      jobId: state.jobId,
+      downloadToken: state.downloadToken,
+      formId: state.data?.stage1?.result?.form_id || null,
+    });
+  } catch (err) {
+    target.innerHTML =
+      '<p class="rich-foot-note error">Couldn\'t load overlay viewer: ' + (err.message || err) + "</p>";
+  }
 }
 
 async function loadChatTab() {
