@@ -17,11 +17,11 @@ import {
 } from "/js/render.js";
 import { initChat } from "/js/chat.js";
 
-// Inject the floating chat FAB on the dashboard. The widget is a fixed-
-// position bubble + panel that lives at <body> level — same one used on
-// the upload page (/), via /js/site.js. Reveal it immediately rather
-// than after the upload-page 10s delay since this page is post-upload.
-initChat({ delayMs: 0 });
+// The floating chat FAB is mounted lazily once the dashboard data
+// resolves — see init() / pollResolveLoop() below. We delay the call so
+// we can pass `jobContext` (real numbers from this contract) to the
+// chat widget; without it the AI has no idea what report it's
+// answering questions about.
 
 const $ = (id) => document.getElementById(id);
 
@@ -95,6 +95,9 @@ async function init() {
 
   renderFooterMeta(data);
   gateOverlayTab(data);
+  if (state.paid) {
+    initChat({ delayMs: 0, jobContext: buildJobContext(data) });
+  }
   renderReportTab();
 }
 
@@ -388,6 +391,11 @@ function pollResolveLoop() {
             gemini: data.panel.gemini?.status || "pending",
           };
         }
+        // Refresh chat's job context so the AI sees newly arrived
+        // stage2 / panel-model results.
+        if (state.paid) {
+          initChat({ delayMs: 0, jobContext: buildJobContext(data) });
+        }
         if (state.tier === "single" && data.stage2?.result) {
           stopped = true;
           renderReportTab();
@@ -455,16 +463,15 @@ async function loadOverlayTab() {
 }
 
 async function loadChatTab() {
-  if (state.chatLoaded) return;
-  state.chatLoaded = true;
+  // Render every time it's clicked (no `chatLoaded` guard) — cheap, and
+  // keeps the open-chat button responsive even if it was rebuilt.
   const target = $("r-chat-content");
-  // The chat widget is the floating FAB at the bottom-right (injected by
-  // initChat() at module load). The Chat tab is a friendly handoff that
-  // opens that same panel — keeps a single source of truth for the
-  // widget's DOM and history.
   target.innerHTML =
     '<div class="chat-placeholder" style="text-align:center;padding:60px 20px;color:var(--muted)">' +
-    '<p style="margin-bottom:20px">Chat with the T-REX about TREC reviews, pricing, or how this report works.</p>' +
+    '<p style="font-size:15px;margin-bottom:20px">' +
+    "Chat with the T-REX about this specific contract. " +
+    "I have the numbers, the modifications, and the analysis loaded — ask anything." +
+    "</p>" +
     '<button class="btn primary" id="r-chat-open">💬 Open chat</button>' +
     "</div>";
   const btn = $("r-chat-open");
@@ -472,9 +479,157 @@ async function loadChatTab() {
     btn.onclick = () => {
       const fab = document.getElementById("chat-fab");
       const panel = document.getElementById("chat-panel");
-      if (panel && !panel.classList.contains("open")) {
-        if (fab) fab.click();
+      if (panel && !panel.classList.contains("open") && fab) {
+        fab.click();
       }
     };
   }
+}
+
+// ---- Per-job context for the chat widget ----
+// Builds a plain-text summary of everything we know about this contract
+// so the AI can answer specific questions ("what's my sales price?",
+// "what did Claude flag?"). Defensive — every field is optional so we
+// can call this on stage1-only data and again as stage2 / panel
+// results trickle in via polling. The backend caps total length at
+// 6000 chars; we still cap individual fields here to keep relevant
+// info from being chopped.
+function buildJobContext(data) {
+  if (!data) return "";
+  const parts = [];
+  const stage1 = data.stage1?.result || {};
+  const tier = data.tier === "panel" ? "Panel review (3 models)"
+    : data.tier === "single" ? "Single review"
+      : "Free quick scan";
+  const paidLine = data.paid_at
+    ? "Paid " + new Date(data.paid_at).toLocaleDateString()
+    : "Not yet paid";
+
+  // --- Header / form facts ---
+  const facts = [];
+  if (stage1.form_id) {
+    facts.push(
+      "Form: TREC " + stage1.form_id +
+      (stage1.form_name ? " (" + stage1.form_name + ")" : "") +
+      (stage1.page_count ? ", " + stage1.page_count + " pages" : "") +
+      (typeof stage1.confidence === "number" ? ", confidence " + stage1.confidence + "%" : ""),
+    );
+  }
+  if (stage1.status) facts.push("Status: " + stage1.status);
+  const sevBits = [];
+  if (typeof stage1.severity_high === "number") sevBits.push(stage1.severity_high + " high");
+  if (typeof stage1.severity_medium === "number") sevBits.push(stage1.severity_medium + " medium");
+  if (sevBits.length) facts.push("Severity: " + sevBits.join(" · "));
+  facts.push("Tier: " + tier + " (" + paidLine + ")");
+
+  // Property city/state/zip only — never the street address. Many
+  // contract addresses are typed as one line ("1428 Magnolia Ave,
+  // Austin TX 78704"); pull just the trailing city + state-and-ZIP
+  // chunk via regex so we don't leak the street.
+  const addr = typeof stage1.property_address === "string" ? stage1.property_address : "";
+  if (addr) {
+    // Match "<City>, <ST> <ZIP>" or "<City> <ST> <ZIP>" at end of string.
+    const m = addr.match(/([A-Za-z .'-]{2,40}),?\s+([A-Z]{2})\s+(\d{5})(?:-\d{4})?\s*$/);
+    if (m) {
+      facts.push("Property: " + m[1].trim() + ", " + m[2] + " " + m[3]);
+    }
+  }
+  if (facts.length) {
+    parts.push("## REPORT FACTS\n" + facts.join("\n"));
+  }
+
+  // --- Quick-scan terms ---
+  const terms = stage1.terms && typeof stage1.terms === "object" ? stage1.terms : null;
+  if (terms) {
+    const lines = [];
+    for (const [key, t] of Object.entries(terms)) {
+      if (!t || typeof t !== "object") continue;
+      const v = (t.value ?? "").toString().slice(0, 80);
+      const note = (t.note ?? "").toString().slice(0, 120);
+      const warn = (t.warning ?? "").toString().slice(0, 160);
+      const label = key.replace(/_/g, " ");
+      let line = "- " + label + ": " + (v || "(blank)");
+      if (note) line += " — " + note;
+      if (warn) line += "  [WARN: " + warn + "]";
+      lines.push(line);
+    }
+    if (lines.length) parts.push("## TERMS\n" + lines.join("\n"));
+  }
+
+  // --- Quick-scan red flags ---
+  const flags = Array.isArray(stage1.red_flags) ? stage1.red_flags : [];
+  if (flags.length) {
+    const lines = flags
+      .filter((f) => f && typeof f === "object")
+      .map((f) => {
+        const sev = (f.severity || "").toString();
+        const title = (f.title || "").toString().slice(0, 160);
+        return "- [" + sev + "] " + title;
+      });
+    if (lines.length) parts.push("## RED FLAGS\n" + lines.join("\n"));
+  }
+
+  // --- Single-tier deep scan ---
+  if (data.tier === "single") {
+    const s2 = data.stage2?.result;
+    if (s2) {
+      if (typeof s2.summary === "string" && s2.summary.trim()) {
+        parts.push("## DEEP-SCAN SUMMARY\n" + s2.summary.trim().slice(0, 1500));
+      }
+      const mods = Array.isArray(s2.modifications) ? s2.modifications : [];
+      if (mods.length) {
+        const lines = mods.map((m) => {
+          const risk = (m?.risk || "").toString();
+          const clause = (m?.clause || "").toString().slice(0, 80);
+          const expl = (m?.explanation || "").toString().slice(0, 200);
+          return "- [" + risk + "] " + clause + " — " + expl;
+        });
+        parts.push("## MODIFICATIONS\n" + lines.join("\n"));
+      }
+      const ft = s2.full_terms && typeof s2.full_terms === "object" ? s2.full_terms : null;
+      if (ft) {
+        const lines = Object.entries(ft).map(([k, v]) => {
+          const val = v == null ? "—" : String(v).slice(0, 120);
+          return "- " + k.replace(/_/g, " ") + ": " + val;
+        });
+        if (lines.length) parts.push("## FULL TERMS\n" + lines.join("\n"));
+      }
+    } else if (data.stage2?.status) {
+      parts.push("## DEEP-SCAN STATUS\n" + data.stage2.status);
+    }
+  }
+
+  // --- Panel tier ---
+  if (data.tier === "panel" && data.panel) {
+    const labels = {
+      claude: "Claude Opus 4.7",
+      gpt: "GPT-5.5 Pro",
+      gemini: "Gemini 2.5 Pro",
+    };
+    const lines = [];
+    for (const k of ["claude", "gpt", "gemini"]) {
+      const slot = data.panel[k];
+      if (!slot) continue;
+      const status = slot.status || "pending";
+      const result = slot.result;
+      if (result && typeof result.summary === "string" && result.summary.trim()) {
+        lines.push("### " + labels[k] + " (" + status + ")");
+        lines.push(result.summary.trim().slice(0, 600));
+        const mods = Array.isArray(result.modifications) ? result.modifications : [];
+        if (mods.length) {
+          const top = mods.slice(0, 5).map((m) => {
+            const risk = (m?.risk || "").toString();
+            const clause = (m?.clause || "").toString().slice(0, 60);
+            return "  - [" + risk + "] " + clause;
+          });
+          lines.push(top.join("\n"));
+        }
+      } else {
+        lines.push("### " + labels[k] + " — " + (status === "complete" ? "complete (no result)" : "still drafting"));
+      }
+    }
+    if (lines.length) parts.push("## PANEL RESULTS\n" + lines.join("\n"));
+  }
+
+  return parts.join("\n\n");
 }

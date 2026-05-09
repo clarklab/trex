@@ -223,6 +223,14 @@ export async function mount(container, ctx) {
   // Keyboard: F flip, arrows nav, Esc back to Full Report
   let flipped = false;
   const onKeyDown = (e) => {
+    // Only handle keys when the Overlay tab is the active one. The
+    // dashboard hides the other panes via [data-pane="overlay"] hidden
+    // state — without this guard, pressing Esc on the Chat or Full
+    // Report tab would unintentionally fire overlay:exit and snap
+    // the user back to Full Report.
+    const overlayPane = document.querySelector('.r-tab-pane[data-pane="overlay"]');
+    if (!overlayPane || overlayPane.hidden) return;
+
     const t = e.target;
     if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
     if (e.key === "f" || e.key === "F") {

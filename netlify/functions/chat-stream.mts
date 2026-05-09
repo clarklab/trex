@@ -33,7 +33,7 @@ export default async (req: Request, _context: Context) => {
     return new Response("Method not allowed", { status: 405 });
   }
 
-  let body: { messages?: IncomingMessage[] };
+  let body: { messages?: IncomingMessage[]; job_context?: string };
   try {
     body = await req.json();
   } catch {
@@ -47,6 +47,18 @@ export default async (req: Request, _context: Context) => {
   if (messages[messages.length - 1].role !== "user") {
     return new Response("Last message must be user", { status: 400 });
   }
+
+  const jobContext =
+    typeof body.job_context === "string" && body.job_context.trim().length > 0
+      ? body.job_context.slice(0, 6000)
+      : null;
+
+  const systemPrompt = jobContext
+    ? CHAT_SYSTEM_PROMPT +
+      "\n\n---\n\n## SPECIFIC CONTRACT CONTEXT\n\n" +
+      "You are now answering questions about a specific TREC contract that the user has uploaded and paid for. The report below contains the actual numbers and findings from this contract. Use these specifics when the user asks about their report. If the user asks something not covered here, say so honestly rather than making up numbers.\n\n" +
+      jobContext
+    : CHAT_SYSTEM_PROMPT;
 
   const anthropic = new Anthropic({ timeout: 60_000 });
 
@@ -63,7 +75,7 @@ export default async (req: Request, _context: Context) => {
         const aiStream = await anthropic.messages.create({
           model: "claude-haiku-4-5",
           max_tokens: 800,
-          system: CHAT_SYSTEM_PROMPT,
+          system: systemPrompt,
           messages,
           stream: true,
         });

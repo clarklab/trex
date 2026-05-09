@@ -19,10 +19,17 @@ let dom = null;
 let messages = [];
 let streaming = false;
 let revealTimer = null;
+let jobContext = null;
 
-export function initChat({ delayMs = REVEAL_DELAY_MS } = {}) {
-  if (initialized) return;
+export function initChat({ delayMs = REVEAL_DELAY_MS, jobContext: jc } = {}) {
+  if (initialized) {
+    // Allow updating jobContext on re-call (e.g., r.js refreshing context as
+    // poll ticks bring in stage2 / panel results).
+    if (jc !== undefined) jobContext = jc;
+    return;
+  }
   initialized = true;
+  if (jc !== undefined) jobContext = jc;
 
   injectMarkup();
   attachEvents();
@@ -269,7 +276,10 @@ async function sendMessage() {
     const res = await fetch("/api/chat-stream", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify({
+        messages,
+        ...(jobContext ? { job_context: jobContext } : {}),
+      }),
     });
     if (!res.ok || !res.body) {
       throw new Error(`HTTP ${res.status}`);
