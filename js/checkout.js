@@ -241,6 +241,11 @@ function setupCoupon(jobId, tier, onPaid) {
         }
         return;
       }
+      if (data.recovery_code) {
+        window.location.href = "/r/" + encodeURIComponent(data.recovery_code) + "?paid=1";
+        return;
+      }
+      // Fallback (shouldn't happen — /api/redeem-coupon always returns recovery_code now)
       if (polarHandle && typeof polarHandle.close === "function") {
         try { polarHandle.close(); } catch {}
       }
