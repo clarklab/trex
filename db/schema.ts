@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, integer, jsonb, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, integer, bigint, jsonb, uuid, boolean, date } from "drizzle-orm/pg-core";
 
 export const jobs = pgTable("jobs", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -53,7 +53,59 @@ export const checkoutSessions = pgTable("checkout_sessions", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Anonymized per-contract stats. Captured automatically when quick-scan
+// finishes (and refined when deep-scan + payment land). Designed to be safe
+// to expose publicly via /api/stats — no party names, no street addresses,
+// no clause text. Money in cents to keep aggregations exact.
+export const contractStats = pgTable("contract_stats", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  jobId: uuid("job_id").notNull().references(() => jobs.id),
+
+  // Form identification
+  formId: text("form_id"),
+  formName: text("form_name"),
+  pageCount: integer("page_count"),
+  confidence: integer("confidence"),
+  formStatus: text("form_status"),
+
+  // Money (cents)
+  salesPriceCents: bigint("sales_price_cents", { mode: "number" }),
+  earnestMoneyCents: bigint("earnest_money_cents", { mode: "number" }),
+  optionFeeCents: bigint("option_fee_cents", { mode: "number" }),
+  optionPeriodDays: integer("option_period_days"),
+  downPaymentCents: bigint("down_payment_cents", { mode: "number" }),
+  financingAmountCents: bigint("financing_amount_cents", { mode: "number" }),
+  financingType: text("financing_type"),
+
+  // Geographic — city/state/zip only, never the street address
+  propertyCity: text("property_city"),
+  propertyState: text("property_state"),
+  propertyZip: text("property_zip"),
+
+  // Timing
+  effectiveDate: date("effective_date"),
+  closingDate: date("closing_date"),
+  closingDaysOut: integer("closing_days_out"),
+
+  // Risk profile
+  modificationCount: integer("modification_count"),
+  severityHigh: integer("severity_high"),
+  severityMedium: integer("severity_medium"),
+  severityLow: integer("severity_low"),
+
+  // Tier / payment
+  tier: text("tier"),
+  paid: boolean("paid").notNull().default(false),
+
+  fileSizeBytes: integer("file_size_bytes"),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export type Job = typeof jobs.$inferSelect;
 export type NewJob = typeof jobs.$inferInsert;
 export type CheckoutSession = typeof checkoutSessions.$inferSelect;
 export type NewCheckoutSession = typeof checkoutSessions.$inferInsert;
+export type ContractStats = typeof contractStats.$inferSelect;
+export type NewContractStats = typeof contractStats.$inferInsert;

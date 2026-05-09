@@ -1,6 +1,6 @@
 import type { Config, Context } from "@netlify/functions";
 import { db } from "../../db/index.js";
-import { checkoutSessions } from "../../db/schema.js";
+import { checkoutSessions, contractStats } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 import { signToken } from "../lib/token.js";
 import { fanOutForTier, type Tier } from "../lib/fanout.js";
@@ -45,6 +45,18 @@ export default async (req: Request, context: Context) => {
               paidAt: new Date(),
             })
             .where(eq(checkoutSessions.id, sessionId));
+
+          try {
+            await db
+              .update(contractStats)
+              .set({ paid: true, tier: session.tier, updatedAt: new Date() })
+              .where(eq(contractStats.jobId, session.jobId));
+          } catch (statsErr) {
+            console.warn(
+              `checkout-status: stats update failed:`,
+              statsErr instanceof Error ? statsErr.message : statsErr,
+            );
+          }
 
           const reqOrigin = (() => {
             try { return new URL(req.url).origin; } catch { return ""; }

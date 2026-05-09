@@ -1,10 +1,11 @@
 import type { Config, Context } from "@netlify/functions";
 import Anthropic from "@anthropic-ai/sdk";
 import { db } from "../../db/index.js";
-import { jobs } from "../../db/schema.js";
+import { jobs, contractStats } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 import { loadPdfBase64 } from "../lib/pdf-blob.js";
 import { extractJson } from "../lib/json-extract.js";
+import { extractStats } from "../lib/stats-extract.js";
 
 const PROMPT = `You are analyzing a Texas Real Estate Commission (TREC) contract PDF that is attached above. Read the PDF directly — including any handwritten or typed entries, signatures, stamps, and scanned pages. Return ONLY valid JSON, no prose, no markdown fences.
 
@@ -212,6 +213,20 @@ export default async (req: Request, _context: Context) => {
         updatedAt: new Date(),
       })
       .where(eq(jobs.id, jobId));
+
+    // Capture anonymized aggregate stats for this drop. Best-effort: a
+    // parsing hiccup must not fail the whole quick-scan.
+    try {
+      const stats = extractStats(jobId, result, job.fileSize ?? null);
+      if (stats) {
+        await db.insert(contractStats).values(stats);
+      }
+    } catch (statsErr) {
+      console.warn(
+        `quick-scan ${jobId}: stats capture failed:`,
+        statsErr instanceof Error ? statsErr.message : statsErr,
+      );
+    }
 
     return new Response("ok", { status: 200 });
   } catch (err) {

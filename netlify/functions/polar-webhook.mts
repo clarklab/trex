@@ -1,7 +1,7 @@
 import type { Config, Context } from "@netlify/functions";
 import { validateEvent, WebhookVerificationError } from "@polar-sh/sdk/webhooks";
 import { db } from "../../db/index.js";
-import { checkoutSessions } from "../../db/schema.js";
+import { checkoutSessions, contractStats } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 import { fanOutForTier, type Tier } from "../lib/fanout.js";
 
@@ -62,6 +62,20 @@ export default async (req: Request, context: Context) => {
           paidAt: new Date(),
         })
         .where(eq(checkoutSessions.id, sessionId));
+
+      // Mirror the paid + tier state onto the anonymized stats row so
+      // /api/stats aggregations stay in sync.
+      try {
+        await db
+          .update(contractStats)
+          .set({ paid: true, tier: session.tier, updatedAt: new Date() })
+          .where(eq(contractStats.jobId, session.jobId));
+      } catch (statsErr) {
+        console.warn(
+          `polar-webhook: stats update failed for ${session.jobId}:`,
+          statsErr instanceof Error ? statsErr.message : statsErr,
+        );
+      }
 
       const reqOrigin = (() => {
         try { return new URL(req.url).origin; } catch { return ""; }
