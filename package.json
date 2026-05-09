@@ -7,7 +7,8 @@
     "dev": "netlify dev",
     "build": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "build:blanks": "node scripts/build-blank.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.95.1",
@@ -23,11 +24,13 @@
     "qrcode": "^1.5.4"
   },
   "devDependencies": {
+    "@napi-rs/canvas": "^1.0.0",
     "@types/node": "^22.0.0",
     "@types/pdf-parse": "^1.1.4",
     "@types/pdfkit": "^0.13.5",
     "@types/qrcode": "^1.5.5",
     "drizzle-kit": "beta",
+    "pdfjs-dist": "^5.7.284",
     "typescript": "^5.6.0"
   }
 }
