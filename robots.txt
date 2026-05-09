@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Per-user recovery dashboards (no SEO value, exclude from crawlers)
+Disallow: /r/
+Disallow: /api/
+
+Sitemap: https://trexlawyer.com/sitemap.xml

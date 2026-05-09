@@ -119,6 +119,33 @@
         }
       }
     </style>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {"@type":"ListItem","position":1,"name":"Home","item":"https://trexlawyer.com/"},
+              {"@type":"ListItem","position":2,"name":"TREC Forms","item":"https://trexlawyer.com/#forms"},
+              {"@type":"ListItem","position":3,"name":"TREC 20-18 Contract Review","item":"https://trexlawyer.com/forms/20-18"}
+            ]
+          },
+          {
+            "@type": "FAQPage",
+            "mainEntity": [
+              {"@type":"Question","name":"What is TREC 20-18?","acceptedAnswer":{"@type":"Answer","text":"TREC 20-18 is the current version of the One to Four Family Residential Contract (Resale) — the standard form the Texas Real Estate Commission promulgates for the sale of an existing single-family home, duplex, triplex, or fourplex. It's eleven pages long, covers everything from sales-price math (paragraph 3) to the option fee and termination period (paragraph 5), the survey and title (paragraph 6), property condition and warranty (paragraph 7), closing and possession (paragraphs 9–10), special provisions (paragraph 11), and the broker information page."}},
+              {"@type":"Question","name":"What does T-REX actually check on a 20-18?","acceptedAnswer":{"@type":"Answer","text":"The full set of paragraphs against the current 20-18 standard: the sales-price split in §3 (cash + financing = total), earnest-money amount and escrow agent in §5A, option fee and option period dates in §5B, financing addendum match-up to §4, survey selection and deadlines in §6C, title-objection deadline in §6D, the HOA mandatory-membership box in §6E, the as-is/repairs selection in §7D, residential service contract contribution in §7H, lead-based paint addendum (federal requirement for pre-1978 homes), special provisions in §11, the effective date on the broker page, and the addenda checklist on page 9. Every flag cites the paragraph it came from."}},
+              {"@type":"Question","name":"Is this legal advice?","acceptedAnswer":{"@type":"Answer","text":"No. T-REX is a fast second opinion that helps Texas buyers, sellers, and agents understand a 20-18 before they sign. For high-stakes transactions, your broker or a Texas-licensed attorney should still review the final document. Texas real estate license holders are also restricted from giving legal advice on contract language — T-REX gives you the read, your attorney gives the advice."}},
+              {"@type":"Question","name":"What's the difference between the free scan and the $5 review?","acceptedAnswer":{"@type":"Answer","text":"The free quick scan tells you what form you've uploaded, key terms (price, earnest money, option period, closing date), and a top-line risk summary. The $5 full report runs a full clause-by-clause comparison against the standard 20-18, surfaces every modification and red flag, generates a downloadable PDF report, unlocks a visual overlay that lets you slide your contract over the blank standard form to spot edits, and gives you a chat with the AI about your specific contract's terms."}},
+              {"@type":"Question","name":"What happens to my contract PDF?","acceptedAnswer":{"@type":"Answer","text":"Files are encrypted in transit, processed in memory, and deleted within 24 hours. We don't train models on your contracts and we don't share them with third parties. We do keep an anonymized record of aggregate stats (sales price, earnest money, county, etc.) for the public stats page, but never anything that identifies a specific contract or party."}},
+              {"@type":"Question","name":"Do I need to use TREC 20-18 if I'm a FSBO seller?","acceptedAnswer":{"@type":"Answer","text":"In Texas, license holders (real estate agents and brokers) are required to use TREC-promulgated forms for transactions inside their licensed scope. FSBO (for-sale-by-owner) sellers and unrepresented buyers aren't required to use the form — but almost everyone does, because title companies, lenders, and opposing counsel expect it. Drop yours regardless and T-REX will still tell you what's in it."}},
+              {"@type":"Question","name":"What's the difference between 20-18 and earlier versions like 20-17 or 20-16?","acceptedAnswer":{"@type":"Answer","text":"TREC publishes a new version of the form whenever the underlying law or policy changes. Each version number is a different effective date — 20-17 was used through November 2024; 20-18 became mandatory after that. T-REX always compares against the current version. If you upload an older form, we'll tell you the version we detected and warn that it may be out of date."}}
+            ]
+          }
+        ]
+      }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@polar-sh/checkout@0.2.0/dist/embed.global.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
   </head>

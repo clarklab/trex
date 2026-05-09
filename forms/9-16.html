@@ -119,6 +119,33 @@
         }
       }
     </style>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {"@type":"ListItem","position":1,"name":"Home","item":"https://trexlawyer.com/"},
+              {"@type":"ListItem","position":2,"name":"TREC Forms","item":"https://trexlawyer.com/#forms"},
+              {"@type":"ListItem","position":3,"name":"TREC 9-16 Contract Review","item":"https://trexlawyer.com/forms/9-16"}
+            ]
+          },
+          {
+            "@type": "FAQPage",
+            "mainEntity": [
+              {"@type":"Question","name":"What is TREC 9-16?","acceptedAnswer":{"@type":"Answer","text":"TREC 9-16 is the current version of the Unimproved Property Contract — the standard Texas form for buying raw land without significant buildings or agricultural operations. It's the form for vacant residential lots, urban infill parcels, and undeveloped acreage. The form covers property description, sales-price math, earnest money, title and survey, easements and access, and special provisions, but has no property-condition paragraph (because there's nothing built to inspect)."}},
+              {"@type":"Question","name":"What's the difference between 9-16, 20-18, and 25-15?","acceptedAnswer":{"@type":"Answer","text":"9-16 is for raw land. 20-18 is for a home that's already built on a residential lot. 25-15 is for farm and ranch property — rural land with significant agricultural use, mineral and water rights to handle, hunting or grazing leases. If you're buying a residential lot to build on, that's typically 9-16. If you're buying a hay farm or ranch, that's 25-15. T-REX detects which form you've uploaded and reviews against the right standard."}},
+              {"@type":"Question","name":"What does T-REX check on a 9-16?","acceptedAnswer":{"@type":"Answer","text":"The full paragraph set against the current 9-16 standard: property description and acreage in §2, sales-price split in §3, earnest money and option fee in §5, title commitment and exceptions in §6, survey selection and objection deadlines in §6C, easements and rights-of-way, deed restrictions, environmental conditions, special provisions in §11, the effective date, and the addenda checklist. Every flag cites the paragraph it came from."}},
+              {"@type":"Question","name":"What about access, utilities, and zoning?","acceptedAnswer":{"@type":"Answer","text":"A buildable lot needs legal access, utilities at or near the lot line, and zoning that allows the intended use. The 9-16 doesn't always make these explicit — they show up in the title commitment, the survey, and any plat notes. T-REX flags silent or vague language and reminds you to verify with the city or county before closing. A landlocked lot with no recorded access easement is a hard problem to fix after you own it."}},
+              {"@type":"Question","name":"What's an objection deadline in §6?","acceptedAnswer":{"@type":"Answer","text":"Once the title company delivers the title commitment and the survey, the buyer has a defined window to object to anything that materially affects use of the property — easements, encroachments, restrictions, etc. Miss the deadline and the buyer is deemed to accept those issues. T-REX checks the date math and flags missing or unclear deadlines."}},
+              {"@type":"Question","name":"Is this legal advice?","acceptedAnswer":{"@type":"Answer","text":"No. T-REX is a fast second opinion that helps Texas land buyers, sellers, and agents understand a 9-16 before they sign. Land deals — especially ones where the buyer plans to build — often involve attorneys, surveyors, and city planning consultations. T-REX is the first-pass triage, not a substitute for that team."}},
+              {"@type":"Question","name":"What's the difference between the free scan and the $5 review?","acceptedAnswer":{"@type":"Answer","text":"The free quick scan tells you what form you've uploaded, key terms (price, acreage, county, access status), and a top-line risk summary. The $5 full report runs a full clause-by-clause comparison against the standard 9-16, flags every modification, generates a downloadable PDF, unlocks a visual overlay that slides your contract over the blank form, and gives you a chat with the AI about your specific contract — including questions about access, utilities, and deed restrictions."}}
+            ]
+          }
+        ]
+      }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@polar-sh/checkout@0.2.0/dist/embed.global.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
   </head>

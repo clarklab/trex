@@ -119,6 +119,33 @@
         }
       }
     </style>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {"@type":"ListItem","position":1,"name":"Home","item":"https://trexlawyer.com/"},
+              {"@type":"ListItem","position":2,"name":"TREC Forms","item":"https://trexlawyer.com/#forms"},
+              {"@type":"ListItem","position":3,"name":"TREC 25-15 Contract Review","item":"https://trexlawyer.com/forms/25-15"}
+            ]
+          },
+          {
+            "@type": "FAQPage",
+            "mainEntity": [
+              {"@type":"Question","name":"What is TREC 25-15?","acceptedAnswer":{"@type":"Answer","text":"TREC 25-15 is the current version of the Farm and Ranch Contract — the standard Texas form for rural, agricultural, and large-acreage property. Compared to the 20-18 (resale), the farm-and-ranch form has dedicated paragraphs for mineral rights, water rights, surface rights, leases (grazing, hunting, agricultural, wind/solar), and personal property like livestock and equipment that's often included in a ranch sale."}},
+              {"@type":"Question","name":"What does T-REX check on a 25-15?","acceptedAnswer":{"@type":"Answer","text":"The full paragraph set against the current 25-15 standard: property description and acreage in §2, mineral rights in §2A and the Mineral Rights Addendum, water rights in §2C, personal property/livestock/equipment, leases in §2E, sales-price split in §3, earnest money and option fee in §5, title commitment in §6, survey and acreage discrepancies in §6C, environmental matters, special provisions in §11, and addenda checklist. Every flag cites the paragraph it came from."}},
+              {"@type":"Question","name":"What about mineral rights?","acceptedAnswer":{"@type":"Answer","text":"In most of Texas, the mineral estate has been severed from the surface — sometimes generations ago. That means the seller may not own the minerals at all, even if they own the surface. The 25-15 §2A and the Mineral Rights Addendum let the parties identify whether minerals convey in full, are reserved by the seller, or are unowned. Surface-use agreements limit how a mineral lessee can drill on the property. T-REX flags missing reservation language, silent mineral status, and inconsistencies between the contract and the title commitment."}},
+              {"@type":"Question","name":"What about water rights and groundwater?","acceptedAnswer":{"@type":"Answer","text":"Texas applies the rule of capture to groundwater — you can pump as much as you can capture beneath your land, subject to the rules of any local groundwater conservation district. Surface water (rivers, ponds, stock tanks) is regulated separately and may have permitted withdrawals. §2C of the 25-15 addresses what water rights the buyer is acquiring. T-REX flags silent or unclear water-rights language and reminds you to check the local groundwater district's rules."}},
+              {"@type":"Question","name":"What's an ag-exemption rollback?","acceptedAnswer":{"@type":"Answer","text":"Texas property tax law gives an ag valuation (often called ag-exemption) to property used for qualifying agricultural purposes — grazing, hay production, wildlife management. If a buyer changes the land use after closing, the prior years' tax savings can be rolled back — billed retroactively for up to five years, with interest. The 25-15 doesn't always address rollback liability cleanly, and a misallocation between buyer and seller can mean a surprise bill years later. T-REX flags missing rollback language."}},
+              {"@type":"Question","name":"Is this legal advice?","acceptedAnswer":{"@type":"Answer","text":"No. T-REX is a fast second opinion that helps Texas farm-and-ranch buyers, sellers, and agents understand a 25-15 before they sign. Rural transactions often involve real estate attorneys, mineral title examiners, and surveyors — T-REX is the first-pass triage, not a substitute for that team."}},
+              {"@type":"Question","name":"What's the difference between the free scan and the $5 review?","acceptedAnswer":{"@type":"Answer","text":"The free quick scan tells you what form you've uploaded, key terms (price, acreage, county, mineral status), and a top-line risk summary. The $5 full report runs a full clause-by-clause comparison against the standard 25-15, flags every modification, generates a downloadable PDF, unlocks a visual overlay that slides your contract over the blank form, and gives you a chat with the AI about your specific contract — including questions about minerals, water, leases, and rollback liability."}}
+            ]
+          }
+        ]
+      }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@polar-sh/checkout@0.2.0/dist/embed.global.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
   </head>

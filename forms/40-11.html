@@ -119,6 +119,33 @@
         }
       }
     </style>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {"@type":"ListItem","position":1,"name":"Home","item":"https://trexlawyer.com/"},
+              {"@type":"ListItem","position":2,"name":"TREC Forms","item":"https://trexlawyer.com/#forms"},
+              {"@type":"ListItem","position":3,"name":"TREC 40-11 Addendum Review","item":"https://trexlawyer.com/forms/40-11"}
+            ]
+          },
+          {
+            "@type": "FAQPage",
+            "mainEntity": [
+              {"@type":"Question","name":"What is TREC 40-11?","acceptedAnswer":{"@type":"Answer","text":"TREC 40-11 is the Third Party Financing Addendum — the attachment the buyer signs whenever they're using a third-party lender to finance the purchase. It modifies §4 of the main contract (TREC 20-18, 30-17, etc.) by specifying the loan type, terms, and deadlines under which the buyer's financing contingency operates. Without this addendum, the financing contingency in the main contract is essentially toothless."}},
+              {"@type":"Question","name":"What does T-REX check on a 40-11?","acceptedAnswer":{"@type":"Answer","text":"The full set of paragraphs against the current 40-11 standard: loan type selection (conventional / FHA-insured / VA-guaranteed / USDA-RHS / reverse-mortgage), loan terms (amount, interest-rate cap, term in years), Buyer Approval deadline, Property Approval and appraisal language, FHA Amendatory Clause (required by federal law for FHA loans), VA Escape Clause (required by federal law for VA loans), and the link back to §4 of the underlying contract. Every flag cites the paragraph it came from."}},
+              {"@type":"Question","name":"What's a Buyer Approval deadline?","acceptedAnswer":{"@type":"Answer","text":"The Buyer Approval deadline is the number of days from effective date by which the buyer must obtain final loan approval. Typical deadlines are 21 to 30 days, but they vary by market and lender. If the buyer doesn't get approved (or doesn't terminate) by the deadline, the financing contingency is generally deemed waived — meaning if the loan later falls through, the buyer can lose the earnest money. T-REX checks the date math and flags deadlines that look unrealistic for current underwriting timelines."}},
+              {"@type":"Question","name":"What's the FHA Amendatory Clause?","acceptedAnswer":{"@type":"Answer","text":"Federal regulations require that any FHA-insured purchase contract include an Amendatory Clause — language that gives the buyer a right to terminate without forfeit if the FHA appraisal comes in below contract price. The clause is paragraph B.4 of the 40-11. Missing or modified clause language can put the lender in violation of federal regulations and may delay closing. T-REX flags missing or non-conforming Amendatory Clauses on FHA deals."}},
+              {"@type":"Question","name":"What's the VA Escape Clause?","acceptedAnswer":{"@type":"Answer","text":"Federal regulations require that any VA-guaranteed purchase contract include an Escape Clause — language giving the veteran-buyer the right to terminate without forfeit if the VA-determined Reasonable Value comes in below contract price. T-REX flags missing or non-conforming Escape Clauses on VA deals."}},
+              {"@type":"Question","name":"Is this legal advice?","acceptedAnswer":{"@type":"Answer","text":"No. T-REX is a fast second opinion that helps Texas financed buyers, sellers, and agents understand a 40-11 before they sign. Federally-insured loans (FHA, VA, USDA) add layers of compliance that real estate attorneys and loan officers handle daily — T-REX is a triage layer, not a substitute."}},
+              {"@type":"Question","name":"What's the difference between the free scan and the $5 review?","acceptedAnswer":{"@type":"Answer","text":"The free quick scan tells you what form you've uploaded, key terms (loan type, Buyer Approval deadline, loan amount), and a top-line risk summary. The $5 full report runs a full paragraph-by-paragraph comparison against the standard 40-11, flags every modification, generates a downloadable PDF, unlocks a visual overlay that slides your addendum over the blank form, and gives you a chat with the AI about your specific addendum — including questions about deadlines and FHA/VA compliance."}}
+            ]
+          }
+        ]
+      }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@polar-sh/checkout@0.2.0/dist/embed.global.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
   </head>

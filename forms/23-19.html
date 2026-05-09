@@ -119,6 +119,33 @@
         }
       }
     </style>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {"@type":"ListItem","position":1,"name":"Home","item":"https://trexlawyer.com/"},
+              {"@type":"ListItem","position":2,"name":"TREC Forms","item":"https://trexlawyer.com/#forms"},
+              {"@type":"ListItem","position":3,"name":"TREC 23-19 Contract Review","item":"https://trexlawyer.com/forms/23-19"}
+            ]
+          },
+          {
+            "@type": "FAQPage",
+            "mainEntity": [
+              {"@type":"Question","name":"What is TREC 23-19?","acceptedAnswer":{"@type":"Answer","text":"TREC 23-19 is the current version of the New Home Contract (Incomplete Construction) — the standard Texas form for buying a home that's still being built at contract signing. It covers everything from sales-price math and earnest money to the substantial-completion deadline, builder default rights, change-order procedures, allowance items, the builder's limited warranty, and closing and possession."}},
+              {"@type":"Question","name":"What does T-REX actually check on a 23-19?","acceptedAnswer":{"@type":"Answer","text":"The full paragraph set against the current 23-19 standard: sales-price split in §3, earnest money in §5, construction documents disclosure, the substantial-completion deadline, builder warranty in §7B, change-order procedures, allowance items, milestone payment schedules if applicable, builder default in §15, buyer default, special provisions in §11, the effective date, and the addenda checklist. Every flag cites the paragraph it came from."}},
+              {"@type":"Question","name":"What's the difference between 23-19 and 24-19?","acceptedAnswer":{"@type":"Answer","text":"23-19 is for a home that's still under construction at contract signing — you sign, then the builder completes the work. 24-19 is for a home that's already completed — typically a spec home, model home, or inventory home that's done and ready to close. The two forms have different paragraphs for substantial completion, change orders, and builder default. T-REX detects which form you've uploaded and reviews against the right standard."}},
+              {"@type":"Question","name":"What does substantial completion mean?","acceptedAnswer":{"@type":"Answer","text":"Substantial completion is the milestone where the home is ready for the buyer's intended use — typically when a certificate of occupancy issues — even if minor punch-list items remain. The 23-19 sets a target date for substantial completion and addresses what happens if the builder misses it. Some contracts include daily delay damages; others give the buyer a termination right after a grace period. T-REX flags vague definitions and missing penalty terms."}},
+              {"@type":"Question","name":"Is this legal advice?","acceptedAnswer":{"@type":"Answer","text":"No. T-REX is a fast second opinion that helps Texas new-construction buyers, sellers, and agents understand a 23-19 before they sign. For high-stakes transactions — especially custom builds running into the seven figures — a Texas-licensed real estate attorney should review the final contract along with the construction documents. T-REX gives you the read; your attorney gives the advice."}},
+              {"@type":"Question","name":"What's the difference between the free scan and the $5 review?","acceptedAnswer":{"@type":"Answer","text":"The free quick scan tells you what form you've uploaded, key terms (price, earnest money, target completion date, builder name), and a top-line risk summary. The $5 full report runs a full clause-by-clause comparison against the standard 23-19, flags every modification, generates a downloadable PDF, unlocks a visual overlay that slides your contract over the blank form, and gives you a chat with the AI about your specific contract — including questions about milestone payments, allowances, and warranty exclusions."}},
+              {"@type":"Question","name":"What's the difference between 23-19 and earlier versions like 23-17?","acceptedAnswer":{"@type":"Answer","text":"TREC publishes a new version of the form whenever the underlying law or policy changes. Each version number is a different effective date. T-REX always compares against the current version (23-19). If you upload an older form, we'll tell you the version we detected and warn that it may be out of date."}}
+            ]
+          }
+        ]
+      }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@polar-sh/checkout@0.2.0/dist/embed.global.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
   </head>

@@ -119,6 +119,33 @@
         }
       }
     </style>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {"@type":"ListItem","position":1,"name":"Home","item":"https://trexlawyer.com/"},
+              {"@type":"ListItem","position":2,"name":"TREC Forms","item":"https://trexlawyer.com/#forms"},
+              {"@type":"ListItem","position":3,"name":"TREC OP-H Disclosure Review","item":"https://trexlawyer.com/forms/op-h"}
+            ]
+          },
+          {
+            "@type": "FAQPage",
+            "mainEntity": [
+              {"@type":"Question","name":"What is TREC OP-H?","acceptedAnswer":{"@type":"Answer","text":"TREC OP-H is the Seller's Disclosure Notice — the Texas Property Code §5.008 form sellers of residential property are required to deliver to buyers. It asks the seller to disclose what they know about the property's condition, repairs, environmental hazards, and other material facts. It's not a contract; it's a sworn statement that the buyer relies on alongside an inspection."}},
+              {"@type":"Question","name":"Are sellers required to give this in Texas?","acceptedAnswer":{"@type":"Answer","text":"Yes, with a few exceptions. Texas Property Code §5.008 requires sellers of single-family residential property to deliver a written disclosure to the buyer on or before the effective date of the contract. Exceptions include certain court-ordered transfers, transfers between co-owners, transfers to or from a government entity, and new construction not yet occupied. T-REX flags whether the property appears to fit one of those exceptions."}},
+              {"@type":"Question","name":"What does T-REX check on an OP-H?","acceptedAnswer":{"@type":"Answer","text":"Every section of the current OP-H: property condition checkboxes (roof, plumbing, electrical, HVAC, foundation, appliances, fireplace, water heater, septic, pool, etc.), repair and alteration history, permits status, environmental hazards (asbestos, lead, mold, radon, urea-formaldehyde), water damage and flooding history including FEMA flood zone, prior insurance claims, HOA membership and fees, any known lawsuits or liens, and the federal lead-based-paint addendum (required for pre-1978 homes). T-REX flags missing checkboxes, unknown overuse, contradictions between sections, and missing signatures."}},
+              {"@type":"Question","name":"Why does the seller keep checking unknown?","acceptedAnswer":{"@type":"Answer","text":"Unknown is a legitimate answer when the seller actually doesn't know — which is common for inherited properties or long-held rentals. But pattern-overuse of unknown is a flag. A seller who's lived in the home for 15 years and doesn't know whether the roof has ever leaked may be avoiding disclosure liability. T-REX flags overuse so the buyer can ask the right follow-up questions before option period expires."}},
+              {"@type":"Question","name":"What's the lead-based-paint addendum?","acceptedAnswer":{"@type":"Answer","text":"Federal law (the Residential Lead-Based Paint Hazard Reduction Act of 1992, also known as Title X) requires sellers of homes built before 1978 to deliver a separate lead-based-paint disclosure and the EPA's Protect Your Family from Lead in Your Home pamphlet. The OP-H itself has a checkbox referencing this requirement. T-REX flags missing or incomplete lead disclosures for pre-1978 homes."}},
+              {"@type":"Question","name":"Is this legal advice?","acceptedAnswer":{"@type":"Answer","text":"No. T-REX is a fast second opinion that helps Texas buyers, sellers, and agents review the OP-H before proceeding. For specific concerns — especially after the option period — a Texas-licensed real estate attorney should advise. T-REX gives you the read; your attorney gives the advice."}},
+              {"@type":"Question","name":"What's the difference between the free scan and the $5 review?","acceptedAnswer":{"@type":"Answer","text":"The free quick scan tells you what form you've uploaded and a top-line summary (sections completed, missing answers, flags). The $5 full report runs a full section-by-section comparison against the standard OP-H, flags every inconsistency, generates a downloadable PDF, unlocks a visual overlay that slides your disclosure over the blank form, and gives you a chat with the AI about your specific disclosure — including questions about defects, repairs, and follow-up items for the inspector."}}
+            ]
+          }
+        ]
+      }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@polar-sh/checkout@0.2.0/dist/embed.global.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
   </head>

@@ -119,6 +119,33 @@
         }
       }
     </style>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {"@type":"ListItem","position":1,"name":"Home","item":"https://trexlawyer.com/"},
+              {"@type":"ListItem","position":2,"name":"TREC Forms","item":"https://trexlawyer.com/#forms"},
+              {"@type":"ListItem","position":3,"name":"TREC 30-17 Contract Review","item":"https://trexlawyer.com/forms/30-17"}
+            ]
+          },
+          {
+            "@type": "FAQPage",
+            "mainEntity": [
+              {"@type":"Question","name":"What is TREC 30-17?","acceptedAnswer":{"@type":"Answer","text":"TREC 30-17 is the current version of the Residential Condominium Contract (Resale) — the standard form the Texas Real Estate Commission promulgates for the purchase of an existing condo unit. Unlike a single-family resale (which uses 20-18), the condo form has dedicated paragraphs for the HOA resale certificate, common-element vs. limited common-element coverage, and the condo declaration and bylaws."}},
+              {"@type":"Question","name":"What does T-REX actually check on a 30-17?","acceptedAnswer":{"@type":"Answer","text":"The full paragraph set against the current 30-17 standard: property identification and unit description in §2, sales-price split in §3, license-holder disclosure in §4, earnest money and option fee in §5A and §5B, title commitment in §6, the HOA resale certificate request and delivery deadline in §7B, the condo association financial information in §7C, property condition in §7E, closing and possession in §9–10, special provisions in §11, and the addenda checklist. Every flag cites the paragraph it came from."}},
+              {"@type":"Question","name":"What's an HOA resale certificate and why does it matter?","acceptedAnswer":{"@type":"Answer","text":"In Texas, a condo seller is required to deliver the HOA resale certificate to the buyer before closing. The certificate discloses monthly assessments, special assessments, reserve balances, pending litigation, governing documents, and any transfer fees. §7B of the 30-17 sets the request and delivery deadlines. If the certificate is delivered late or contains material changes, the buyer has a termination right. T-REX flags missing checkboxes, missed deadlines, and inconsistencies between the certificate and the contract."}},
+              {"@type":"Question","name":"Is this legal advice?","acceptedAnswer":{"@type":"Answer","text":"No. T-REX is a fast second opinion that helps Texas condo buyers, sellers, and agents understand a 30-17 before they sign. For high-stakes transactions, your broker or a Texas-licensed attorney should still review the final document. T-REX gives you the read; your attorney gives the advice."}},
+              {"@type":"Question","name":"What's the difference between the free scan and the $5 review?","acceptedAnswer":{"@type":"Answer","text":"The free quick scan tells you what form you've uploaded, key terms (price, earnest money, option period, closing date), and a top-line risk summary. The $5 full report runs a full clause-by-clause comparison against the standard 30-17, flags every modification, generates a downloadable PDF, unlocks a visual overlay that slides your contract over the blank form to spot edits, and gives you a chat with the AI about your specific condo contract — including questions about the HOA documents."}},
+              {"@type":"Question","name":"Can I use 30-17 for a townhouse or duplex?","acceptedAnswer":{"@type":"Answer","text":"Only if the property is governed by a condominium declaration. A condo in Texas is a legal structure, not a building type — high-rises, mid-rises, garden-style units, and even townhome-style buildings can all be condos if the developer filed under the Texas Uniform Condominium Act. If the property is a townhouse on a fee-simple lot with an HOA, that's typically a 20-18 deal, not a 30-17. T-REX will tell you which form you've uploaded."}},
+              {"@type":"Question","name":"What's the difference between 30-17 and earlier versions like 30-16?","acceptedAnswer":{"@type":"Answer","text":"TREC publishes a new version of the form whenever the underlying law or policy changes. Each version number is a different effective date. T-REX always compares against the current version (30-17). If you upload an older form, we'll tell you the version we detected and warn that it may be out of date."}}
+            ]
+          }
+        ]
+      }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@polar-sh/checkout@0.2.0/dist/embed.global.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
   </head>

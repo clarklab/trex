@@ -49,6 +49,29 @@
     <link rel="preload" href="/assets/rex-concern.webp" as="image" type="image/webp" />
     <link rel="preload" href="/assets/rex-cheer.webp" as="image" type="image/webp" />
     <link rel="stylesheet" href="/styles.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://trexlawyer.com/#org",
+            "name": "T-REX LAWYER",
+            "url": "https://trexlawyer.com/",
+            "logo": "https://trexlawyer.com/assets/avatar-default.png",
+            "description": "AI-powered TREC contract review for Texas real estate. Drop a contract, get a plain-English red-flag review in 30 seconds. Free quick scan, $5 full report."
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://trexlawyer.com/#website",
+            "url": "https://trexlawyer.com/",
+            "name": "T-REX LAWYER",
+            "description": "Texas TREC contract review in 30 seconds.",
+            "publisher": { "@id": "https://trexlawyer.com/#org" }
+          }
+        ]
+      }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@polar-sh/checkout@0.2.0/dist/embed.global.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
   </head>

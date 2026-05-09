@@ -119,6 +119,33 @@
         }
       }
     </style>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {"@type":"ListItem","position":1,"name":"Home","item":"https://trexlawyer.com/"},
+              {"@type":"ListItem","position":2,"name":"TREC Forms","item":"https://trexlawyer.com/#forms"},
+              {"@type":"ListItem","position":3,"name":"TREC 24-19 Contract Review","item":"https://trexlawyer.com/forms/24-19"}
+            ]
+          },
+          {
+            "@type": "FAQPage",
+            "mainEntity": [
+              {"@type":"Question","name":"What is TREC 24-19?","acceptedAnswer":{"@type":"Answer","text":"TREC 24-19 is the current version of the New Home Contract (Completed Construction) — the standard Texas form for buying a newly built home that's already finished and ready to close. It covers sales-price math, earnest money and option fee, the builder's limited warranty, the construction documents disclosure, allowances and upgrades, walk-through and punch-list, and closing and possession."}},
+              {"@type":"Question","name":"What does T-REX actually check on a 24-19?","acceptedAnswer":{"@type":"Answer","text":"The full paragraph set against the current 24-19 standard: the sales-price split in §3, earnest-money amount and escrow agent in §5, option fee and termination period, construction documents disclosure in §5, builder limited warranty in §7B (workmanship, systems, structural), implied-warranty waiver language, allowance and upgrade selections, walk-through and punch-list deadlines, special provisions in §11, the effective date, and the addenda checklist. Every flag cites the paragraph it came from."}},
+              {"@type":"Question","name":"What's the difference between 24-19 and 23-19?","acceptedAnswer":{"@type":"Answer","text":"24-19 is for a home that's already finished at contract signing — a completed spec home, model home, or inventory home. 23-19 is for a home that's still under construction — you sign while the builder's still framing or finishing. The two forms have different paragraphs for substantial-completion deadlines, change orders, and builder default. T-REX detects which form you've uploaded and reviews against the right standard."}},
+              {"@type":"Question","name":"Is this legal advice?","acceptedAnswer":{"@type":"Answer","text":"No. T-REX is a fast second opinion that helps Texas new-home buyers, sellers, and agents understand a 24-19 before they sign. For high-stakes transactions, your broker or a Texas-licensed attorney should still review the final document, especially any builder-supplied riders, warranty exclusions, and arbitration provisions. T-REX gives you the read; your attorney gives the advice."}},
+              {"@type":"Question","name":"What's the difference between the free scan and the $5 review?","acceptedAnswer":{"@type":"Answer","text":"The free quick scan tells you what form you've uploaded, key terms (price, earnest money, option period, closing date), and a top-line risk summary. The $5 full report runs a full clause-by-clause comparison against the standard 24-19, flags every modification, generates a downloadable PDF, unlocks a visual overlay that slides your contract over the blank form, and gives you a chat with the AI about your specific contract — including questions about builder riders and warranty exclusions."}},
+              {"@type":"Question","name":"Should I trust the builder's standard contract?","acceptedAnswer":{"@type":"Answer","text":"The TREC 24-19 itself is balanced. But many builders attach their own riders and addenda — preferred-lender requirements, mandatory arbitration, as-is language layered on top of the warranty, allowance pricing that benefits the builder. T-REX flags any non-standard language that doesn't appear in the promulgated TREC form, so you know what to negotiate or have an attorney review before you sign."}},
+              {"@type":"Question","name":"What's the difference between 24-19 and earlier versions like 24-18?","acceptedAnswer":{"@type":"Answer","text":"TREC publishes a new version of the form whenever the underlying law or policy changes. Each version number is a different effective date. T-REX always compares against the current version (24-19). If you upload an older form, we'll tell you the version we detected and warn that it may be out of date."}}
+            ]
+          }
+        ]
+      }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@polar-sh/checkout@0.2.0/dist/embed.global.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
   </head>
