@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Your TREC Report — T-REX Lawyer</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="icon" href="/assets/icon-texas.svg" />
+  </head>
+  <body class="r-page">
+    <header class="r-header">
+      <a href="/" class="r-logo">
+        <span class="logo-mark"></span>
+        <span class="logo-text">T-REX LAWYER</span>
+      </a>
+    </header>
+
+    <main class="r-main">
+      <section class="r-disclaimer" id="r-disclaimer">
+        <strong>This URL is your login.</strong>
+        Anyone with it can see this report. We don't store personal info
+        beyond what's in the contract data.
+      </section>
+
+      <section class="r-share" id="r-share">
+        <label class="r-share-label">Save or share this URL</label>
+        <div class="r-share-row">
+          <input
+            id="r-share-input"
+            class="r-share-input"
+            readonly
+            value=""
+          />
+          <button class="btn primary" id="r-share-copy">📋 Copy</button>
+        </div>
+      </section>
+
+      <nav class="r-tabs" id="r-tabs">
+        <button class="r-tab active" data-tab="report">📄 Full Report</button>
+        <button class="r-tab" data-tab="overlay">🔍 Visual Overlay</button>
+        <button class="r-tab" data-tab="chat">💬 Chat</button>
+      </nav>
+
+      <section class="r-tab-pane" data-pane="report">
+        <div id="r-report-content"></div>
+      </section>
+      <section class="r-tab-pane" data-pane="overlay" hidden>
+        <div id="r-overlay-content"></div>
+      </section>
+      <section class="r-tab-pane" data-pane="chat" hidden>
+        <div id="r-chat-content"></div>
+      </section>
+
+      <footer class="r-footer-meta" id="r-meta"></footer>
+    </main>
+
+    <!-- Reuse the same loader markup from index.html.
+         IMPORTANT: paste the full <section id="generating-loader">
+         block from index.html here verbatim — render.js's controller
+         expects exactly this DOM structure. -->
+        <section id="generating-loader" class="generating-loader" hidden>
+          <div class="generating-card">
+            <!-- Single tier: one rex centered -->
+            <div class="rex-stage" data-mode="single" hidden>
+              <div class="rex-spotlight"></div>
+              <img
+                class="rex-hero"
+                id="rex-hero"
+                src="/assets/rex.png"
+                alt=""
+                width="220"
+                height="220"
+              />
+            </div>
+
+            <!-- Panel tier: three rexes side by side -->
+            <div class="rex-stage" data-mode="panel" hidden>
+              <div class="rex-trio">
+                <div class="rex-trio-card" data-model="claude">
+                  <div class="rex-trio-spot"></div>
+                  <img class="rex-trio-img" data-trio-img="claude" src="/assets/rex.png" alt="" width="120" height="120" />
+                  <div class="rex-trio-name">Claude Opus 4.7</div>
+                  <div class="rex-trio-state" data-trio-state="claude">Reading…</div>
+                </div>
+                <div class="rex-trio-card" data-model="gpt">
+                  <div class="rex-trio-spot"></div>
+                  <img class="rex-trio-img" data-trio-img="gpt" src="/assets/rex-concern.png" alt="" width="120" height="120" />
+                  <div class="rex-trio-name">GPT-5.5 Pro</div>
+                  <div class="rex-trio-state" data-trio-state="gpt">Reading…</div>
+                </div>
+                <div class="rex-trio-card" data-model="gemini">
+                  <div class="rex-trio-spot"></div>
+                  <img class="rex-trio-img" data-trio-img="gemini" src="/assets/rex-cheer.png" alt="" width="120" height="120" />
+                  <div class="rex-trio-name">Gemini 2.5 Pro</div>
+                  <div class="rex-trio-state" data-trio-state="gemini">Reading…</div>
+                </div>
+              </div>
+            </div>
+
+            <h3 class="generating-headline" id="generating-headline">
+              Generating your full report…
+            </h3>
+            <p class="generating-status" id="generating-status">
+              Reading every paragraph carefully…
+            </p>
+            <div class="generating-bar" id="generating-bar" aria-hidden="true">
+              <div class="generating-bar-fill"></div>
+            </div>
+            <p class="generating-meta" id="generating-meta">
+              This usually takes 20–60 seconds. Don't close this tab.
+            </p>
+            <div class="generating-actions" id="generating-actions" hidden>
+              <button type="button" class="btn primary" id="generating-retry">
+                Try again
+              </button>
+            </div>
+          </div>
+        </section>
+
+    <script type="module" src="/js/r.js"></script>
+  </body>
+</html>
