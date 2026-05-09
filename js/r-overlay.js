@@ -134,6 +134,68 @@ export async function mount(container, ctx) {
     thumbs.appendChild(btn);
   }
 
+  // Manual alignment nudge controls — appended to the stage and persisted
+  // per-job in localStorage. Lets users compensate for misalignment when
+  // their user PDF doesn't exactly line up with the standard form (scanned,
+  // slightly different DPI, etc.).
+  container.querySelector(".overlay-stage").insertAdjacentHTML("beforeend", `
+    <details class="overlay-align">
+      <summary>Adjust alignment</summary>
+      <div class="overlay-align-controls">
+        <label>X offset
+          <input type="range" min="-20" max="20" step="1" value="0" id="ov-off-x" />
+        </label>
+        <label>Y offset
+          <input type="range" min="-20" max="20" step="1" value="0" id="ov-off-y" />
+        </label>
+        <label>Scale
+          <input type="range" min="0.95" max="1.05" step="0.001" value="1" id="ov-scale" />
+        </label>
+        <button class="overlay-nav-btn" id="ov-reset">Reset</button>
+      </div>
+    </details>
+  `);
+
+  const ALIGN_KEY = "trex-align:" + ctx.jobId;
+  function loadAlignment() {
+    try { return JSON.parse(localStorage.getItem(ALIGN_KEY) || "{}"); }
+    catch { return {}; }
+  }
+  function saveAlignment(a) {
+    try { localStorage.setItem(ALIGN_KEY, JSON.stringify(a)); } catch {}
+  }
+  function applyAlignment(a) {
+    const v = document.getElementById("overlay-viewer");
+    v.style.setProperty("--off-x", (a.x ?? 0) + "px");
+    v.style.setProperty("--off-y", (a.y ?? 0) + "px");
+    v.style.setProperty("--scale", String(a.scale ?? 1));
+  }
+
+  const align = loadAlignment();
+  document.getElementById("ov-off-x").value = String(align.x ?? 0);
+  document.getElementById("ov-off-y").value = String(align.y ?? 0);
+  document.getElementById("ov-scale").value = String(align.scale ?? 1);
+  applyAlignment(align);
+
+  const onAlignChange = () => {
+    const a = {
+      x: Number(document.getElementById("ov-off-x").value),
+      y: Number(document.getElementById("ov-off-y").value),
+      scale: Number(document.getElementById("ov-scale").value),
+    };
+    applyAlignment(a);
+    saveAlignment(a);
+  };
+  ["ov-off-x", "ov-off-y", "ov-scale"].forEach((id) => {
+    document.getElementById(id).addEventListener("input", onAlignChange);
+  });
+  document.getElementById("ov-reset").onclick = () => {
+    document.getElementById("ov-off-x").value = "0";
+    document.getElementById("ov-off-y").value = "0";
+    document.getElementById("ov-scale").value = "1";
+    onAlignChange();
+  };
+
   // Initial render
   await renderPage(1);
 
