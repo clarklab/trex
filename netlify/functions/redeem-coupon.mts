@@ -4,6 +4,7 @@ import { jobs, checkoutSessions, contractStats } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 import { signToken } from "../lib/token.js";
 import { fanOutForTier, type Tier } from "../lib/fanout.js";
+import { generateRecoveryCode } from "../lib/recovery-code.js";
 
 function isTier(t: unknown): t is Tier {
   return t === "single" || t === "panel";
@@ -46,6 +47,7 @@ export default async (req: Request, context: Context) => {
       return Response.json({ error: "Job not found" }, { status: 404 });
     }
 
+    const recoveryCode = generateRecoveryCode();
     const [session] = await db
       .insert(checkoutSessions)
       .values({
@@ -54,6 +56,7 @@ export default async (req: Request, context: Context) => {
         status: "paid",
         method: "coupon",
         paidAt: new Date(),
+        recoveryCode,
       })
       .returning();
 
@@ -84,6 +87,7 @@ export default async (req: Request, context: Context) => {
       job_id: jobId,
       session_id: session.id,
       download_token: signToken(session.id),
+      recovery_code: recoveryCode,
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

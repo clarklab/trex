@@ -4,6 +4,7 @@ import { db } from "../../db/index.js";
 import { jobs, checkoutSessions } from "../../db/schema.js";
 import { eq } from "drizzle-orm";
 import type { Tier } from "../lib/fanout.js";
+import { generateRecoveryCode } from "../lib/recovery-code.js";
 
 const TIER_PRICES: Record<Tier, number> = {
   single: 5,
@@ -69,12 +70,14 @@ export default async (req: Request, _context: Context) => {
     server: polarServerEnv(),
   });
 
+  const recoveryCode = generateRecoveryCode();
   const [session] = await db
     .insert(checkoutSessions)
     .values({
       jobId,
       tier,
       status: "pending",
+      recoveryCode,
     })
     .returning();
 
@@ -107,6 +110,7 @@ export default async (req: Request, _context: Context) => {
     polar_checkout_id: polarCheckout.id,
     polar_checkout_url: polarCheckout.url,
     ln_available: lnAvailable,
+    recovery_code: recoveryCode,
   });
 };
 
