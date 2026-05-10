@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Lander Overview · T-REX LAWYER</title>
+    <meta name="description" content="Internal overview of every lander — homepage and per-form PSEO pages — with live thumbnails and traffic / scan stats." />
+    <meta name="robots" content="noindex,follow" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="apple-touch-icon" href="/assets/avatar-default.png" />
+    <link rel="icon" type="image/png" href="/assets/avatar-default.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@8..36,400;8..36,500;8..36,600;8..36,700&family=JetBrains+Mono:wght@400;500&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+    <style>
+      /* Page chrome */
+      .landers-page {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 0 28px 80px;
+      }
+      .landers-head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 24px;
+        margin: 24px 0 28px;
+        flex-wrap: wrap;
+      }
+      .landers-head h1 {
+        font-size: 28px;
+        letter-spacing: -0.02em;
+        font-weight: 600;
+        color: var(--slate);
+        margin: 8px 0 0;
+      }
+      .landers-head .kicker { color: var(--blue); }
+      .landers-head .sub {
+        font-size: 14px;
+        color: var(--muted);
+        margin: 4px 0 0;
+        max-width: 56ch;
+      }
+      .landers-totals {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(110px, 1fr));
+        gap: 14px;
+        margin: 0 0 28px;
+      }
+      .landers-total {
+        background: #fff;
+        border: 1px solid var(--hair);
+        border-radius: 14px;
+        padding: 14px 16px;
+      }
+      .landers-total .label {
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+      }
+      .landers-total .num {
+        font-size: 22px;
+        font-weight: 600;
+        color: var(--slate);
+        margin-top: 4px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* Grid */
+      .lander-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+      }
+      @media (max-width: 1100px) { .lander-grid { grid-template-columns: repeat(3, 1fr); } }
+      @media (max-width: 880px)  { .lander-grid { grid-template-columns: repeat(2, 1fr); } }
+      @media (max-width: 540px)  { .lander-grid { grid-template-columns: 1fr; } }
+
+      .lander-card {
+        background: #fff;
+        border: 1px solid var(--hair);
+        border-radius: 16px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition: border-color 120ms ease, transform 120ms ease;
+      }
+      .lander-card:hover {
+        border-color: #C8D2E5;
+        transform: translateY(-1px);
+      }
+
+      /* Thumbnail — scaled iframe.
+         Iframe renders at 1280×800 (typical desktop viewport) and gets
+         scaled down via CSS transform. The wrapper clips to the scaled
+         size so the thumbnail tile is exactly 16:10 inside the card. */
+      .lander-thumb-wrap {
+        display: block;
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        background: #F7F8FA;
+        overflow: hidden;
+        border-bottom: 1px solid var(--hair);
+        cursor: pointer;
+        text-decoration: none;
+      }
+      .lander-thumb {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 1280px;
+        height: 800px;
+        border: 0;
+        transform: scale(calc(100% / 1280 * var(--card-w, 280)));
+        transform-origin: top left;
+        pointer-events: none; /* clicks bubble to the <a> wrapper */
+      }
+      /* Compute the scale factor by setting --card-w on each card via JS,
+         so it stays accurate across breakpoints. Falls back to 280px. */
+
+      /* Hover: tiny gradient overlay + "open in new tab" pill */
+      .lander-thumb-wrap::after {
+        content: "Open ↗";
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        background: rgba(31, 41, 55, 0.92);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        padding: 5px 10px;
+        border-radius: 999px;
+        opacity: 0;
+        transition: opacity 120ms ease;
+        pointer-events: none;
+      }
+      .lander-card:hover .lander-thumb-wrap::after { opacity: 1; }
+
+      /* Meta + badge */
+      .lander-meta {
+        padding: 14px 16px 8px;
+      }
+      .lander-badge {
+        display: inline-block;
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--blue);
+        background: var(--blue-50);
+        padding: 3px 8px;
+        border-radius: 6px;
+      }
+      .lander-badge.home { color: var(--coral); background: #FFE9E2; }
+      .lander-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--slate);
+        margin: 8px 0 2px;
+        letter-spacing: -0.005em;
+      }
+      .lander-path {
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 11px;
+        color: var(--muted);
+        margin: 0;
+      }
+
+      /* Stats footer */
+      .lander-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0;
+        margin: 10px 0 0;
+        padding: 10px 16px 14px;
+        border-top: 1px solid var(--hair);
+      }
+      .lander-stats > div { display: flex; flex-direction: column; gap: 2px; }
+      .lander-stats dt {
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--muted);
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        margin: 0;
+      }
+      .lander-stats dd {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--slate);
+        margin: 0;
+        font-variant-numeric: tabular-nums;
+      }
+      .lander-stats dd.skel { color: #C7CCD8; }
+      .lander-stats .scans dt { color: var(--blue); }
+
+      /* Section divider for the second stats row (scans) */
+      .lander-stats-2 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        padding: 0 16px 14px;
+      }
+      .lander-stats-2 > div { display: flex; flex-direction: column; gap: 2px; }
+      .lander-stats-2 dt {
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--blue);
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        margin: 0;
+      }
+      .lander-stats-2 dd {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--slate);
+        margin: 0;
+        font-variant-numeric: tabular-nums;
+      }
+      .lander-stats-2 dd.skel { color: #C7CCD8; }
+      .no-scan { color: #B7BDC8; font-size: 11px; padding-top: 4px; }
+
+      .stats-error {
+        background: #FFF1EE;
+        border: 1px solid #FFD3C9;
+        color: #B23A1F;
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-size: 13px;
+        margin: 0 0 18px;
+      }
+      .stats-error.hidden { display: none; }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <nav class="nav">
+        <a class="brand" href="/" aria-label="T-REX LAWYER home">
+          <div class="mark" role="img" aria-label="T-REX"></div>
+          <span>T-REX LAWYER</span>
+        </a>
+        <div class="nav-links">
+          <a href="/#features">Features</a>
+          <a href="/#forms">Forms</a>
+          <a href="/#faq">FAQ</a>
+        </div>
+      </nav>
+
+      <main class="landers-page">
+        <header class="landers-head">
+          <div>
+            <div class="kicker">Lander overview</div>
+            <h1>Every PSEO page in one view.</h1>
+            <p class="sub">
+              Live thumbnails of the homepage and every per-form lander.
+              Stats refresh every 60s; iframes scaled to ~22% of desktop.
+              Click any thumbnail to open in a new tab.
+            </p>
+          </div>
+        </header>
+
+        <p id="stats-error" class="stats-error hidden"></p>
+
+        <section class="landers-totals" id="landers-totals">
+          <div class="landers-total">
+            <div class="label">Views · 24h</div>
+            <div class="num" id="t-views-24h">—</div>
+          </div>
+          <div class="landers-total">
+            <div class="label">Views · 30d</div>
+            <div class="num" id="t-views-30d">—</div>
+          </div>
+          <div class="landers-total">
+            <div class="label">Scans · 24h</div>
+            <div class="num" id="t-scans-24h">—</div>
+          </div>
+          <div class="landers-total">
+            <div class="label">Scans · 30d</div>
+            <div class="num" id="t-scans-30d">—</div>
+          </div>
+        </section>
+
+        <section class="lander-grid" id="lander-grid">
+          <!-- Cards rendered by JS so we can plug stats straight in. -->
+        </section>
+      </main>
+
+      <footer>
+        <div>© 2026 T-REX Labs · Not a law firm</div>
+        <div>
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
+          <a href="/contact">Contact</a>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      // The 9 landers we know about. Order matters — homepage first,
+      // then forms in order they appear on the homepage forms list.
+      // form_id is null for the homepage (no per-form scan stats).
+      const LANDERS = [
+        { path: "/",              form_id: null,    badge: "Home",      title: "Homepage" },
+        { path: "/forms/20-18",   form_id: "20-18", badge: "TREC 20-18", title: "One to Four Family Residential (Resale)" },
+        { path: "/forms/30-17",   form_id: "30-17", badge: "TREC 30-17", title: "Residential Condominium (Resale)" },
+        { path: "/forms/24-19",   form_id: "24-19", badge: "TREC 24-19", title: "New Home (Completed Construction)" },
+        { path: "/forms/23-19",   form_id: "23-19", badge: "TREC 23-19", title: "New Home (Incomplete Construction)" },
+        { path: "/forms/25-15",   form_id: "25-15", badge: "TREC 25-15", title: "Farm and Ranch" },
+        { path: "/forms/9-16",    form_id: "9-16",  badge: "TREC 9-16",  title: "Unimproved Property" },
+        { path: "/forms/op-h",    form_id: "OP-H",  badge: "TREC OP-H",  title: "Seller's Disclosure Notice" },
+        { path: "/forms/40-11",   form_id: "40-11", badge: "TREC 40-11", title: "Third Party Financing Addendum" },
+      ];
+
+      const grid = document.getElementById("lander-grid");
+      const errBox = document.getElementById("stats-error");
+
+      const fmt = (n) => (n == null ? "—" : Number(n).toLocaleString());
+
+      function renderCards() {
+        grid.innerHTML = LANDERS.map((l) => `
+          <article class="lander-card" data-path="${l.path}">
+            <a href="${l.path}" target="_blank" rel="noopener" class="lander-thumb-wrap" aria-label="Open ${l.title}">
+              <iframe class="lander-thumb" src="${l.path}" loading="lazy" scrolling="no" tabindex="-1" title="${l.title} preview"></iframe>
+            </a>
+            <header class="lander-meta">
+              <span class="lander-badge ${l.path === '/' ? 'home' : ''}">${l.badge}</span>
+              <h3 class="lander-title">${l.title}</h3>
+              <p class="lander-path">trexlawyer.com${l.path}</p>
+            </header>
+            <dl class="lander-stats">
+              <div><dt>Views 24h</dt><dd class="skel" data-stat="views_24h">—</dd></div>
+              <div><dt>Views 30d</dt><dd class="skel" data-stat="views_30d">—</dd></div>
+              <div><dt>Total</dt><dd class="skel" data-stat="views_total">—</dd></div>
+            </dl>
+            ${l.form_id ? `
+              <dl class="lander-stats-2">
+                <div><dt>Scans 24h</dt><dd class="skel" data-stat="scans_24h">—</dd></div>
+                <div><dt>Scans 30d</dt><dd class="skel" data-stat="scans_30d">—</dd></div>
+                <div><dt>Paid</dt><dd class="skel" data-stat="paid">—</dd></div>
+              </dl>
+            ` : `
+              <div class="lander-stats-2"><div><dt class="no-scan">No per-form scans (general homepage)</dt></div></div>
+            `}
+          </article>
+        `).join("");
+
+        // Set --card-w on each thumbnail wrapper so the iframe scale stays
+        // proportional to the actual rendered card width across breakpoints.
+        // Run on load + on resize (debounced).
+        sizeThumbs();
+      }
+
+      function sizeThumbs() {
+        document.querySelectorAll(".lander-thumb-wrap").forEach((wrap) => {
+          const w = wrap.getBoundingClientRect().width;
+          wrap.style.setProperty("--card-w", w);
+          // Set the inline scale on the iframe so the transform takes effect
+          // (CSS calc with var works but only if the var is parsed as a unitless
+          // number — safer to compute in JS).
+          const iframe = wrap.querySelector(".lander-thumb");
+          if (iframe) {
+            const scale = w / 1280;
+            iframe.style.transform = `scale(${scale})`;
+            // Stretch iframe height to match the card via the same scale,
+            // so the bottom doesn't get cut off mid-fold.
+            const iframeH = wrap.getBoundingClientRect().height / scale;
+            iframe.style.height = `${iframeH}px`;
+          }
+        });
+      }
+
+      let resizeTimer;
+      window.addEventListener("resize", () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(sizeThumbs, 100);
+      });
+
+      async function loadStats() {
+        try {
+          const r = await fetch("/api/lander-stats", { cache: "no-cache" });
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          const data = await r.json();
+          applyStats(data);
+        } catch (e) {
+          errBox.textContent = `Couldn't load stats: ${e.message}. The page itself still works — scroll for thumbnails.`;
+          errBox.classList.remove("hidden");
+        }
+      }
+
+      function applyStats(data) {
+        // Index by path / form_id for O(1) lookup
+        const byPath = new Map(data.landers.map((v) => [v.path, v]));
+        const byForm = new Map(
+          data.forms.map((f) => [String(f.form_id).toLowerCase(), f]),
+        );
+
+        let totalViews24h = 0, totalViews30d = 0;
+        let totalScans24h = 0, totalScans30d = 0;
+
+        for (const l of LANDERS) {
+          const v = byPath.get(l.path);
+          const f = l.form_id ? byForm.get(l.form_id.toLowerCase()) : null;
+          const card = grid.querySelector(`[data-path="${l.path}"]`);
+          if (!card) continue;
+
+          const set = (key, val) => {
+            const el = card.querySelector(`[data-stat="${key}"]`);
+            if (el) {
+              el.textContent = fmt(val);
+              el.classList.remove("skel");
+            }
+          };
+
+          set("views_24h", v?.views_24h ?? 0);
+          set("views_30d", v?.views_30d ?? 0);
+          set("views_total", v?.views_total ?? 0);
+
+          if (l.form_id) {
+            set("scans_24h", f?.scans_24h ?? 0);
+            set("scans_30d", f?.scans_30d ?? 0);
+            set("paid", f?.paid ?? 0);
+          }
+
+          totalViews24h += v?.views_24h ?? 0;
+          totalViews30d += v?.views_30d ?? 0;
+          totalScans24h += f?.scans_24h ?? 0;
+          totalScans30d += f?.scans_30d ?? 0;
+        }
+
+        document.getElementById("t-views-24h").textContent = fmt(totalViews24h);
+        document.getElementById("t-views-30d").textContent = fmt(totalViews30d);
+        document.getElementById("t-scans-24h").textContent = fmt(totalScans24h);
+        document.getElementById("t-scans-30d").textContent = fmt(totalScans30d);
+      }
+
+      renderCards();
+      loadStats();
+      // Refresh stats every 60s. The endpoint is also cached at the edge
+      // for 60s so this is mostly free.
+      setInterval(loadStats, 60_000);
+    </script>
+  </body>
+</html>

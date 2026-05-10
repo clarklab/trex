@@ -104,9 +104,21 @@ export const contractStats = pgTable("contract_stats", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Lightweight page-view tracker for the lander pages. One row per /landers
+// page hit, fired by a tiny beacon in <head>. No PII, no auth — this is just
+// a counter so the /landers overview can show traffic per page. Bot inflation
+// is real but acceptable for the dashboard's purpose (relative comparison).
+export const landerViews = pgTable("lander_views", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  path: text("path").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export type Job = typeof jobs.$inferSelect;
 export type NewJob = typeof jobs.$inferInsert;
 export type CheckoutSession = typeof checkoutSessions.$inferSelect;
 export type NewCheckoutSession = typeof checkoutSessions.$inferInsert;
 export type ContractStats = typeof contractStats.$inferSelect;
 export type NewContractStats = typeof contractStats.$inferInsert;
+export type LanderView = typeof landerViews.$inferSelect;
+export type NewLanderView = typeof landerViews.$inferInsert;

@@ -1189,5 +1189,19 @@
     </dialog>
 
     <script type="module" src="/js/app.js"></script>
+    <!-- Lander view beacon. Skipped when loaded in an iframe (so the
+         /landers preview page doesn't inflate counts). -->
+    <script>
+      if (window.self === window.top) {
+        try {
+          fetch("/api/lander-view", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ path: location.pathname }),
+            keepalive: true,
+          }).catch(() => {});
+        } catch (_) {}
+      }
+    </script>
   </body>
 </html>

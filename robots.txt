@@ -4,5 +4,7 @@ Allow: /
 # Per-user recovery dashboards (no SEO value, exclude from crawlers)
 Disallow: /r/
 Disallow: /api/
+# Internal lander overview dashboard
+Disallow: /landers
 
 Sitemap: https://trexlawyer.com/sitemap.xml
