@@ -14,7 +14,6 @@ import {
   renderPanelPane,
   friendlyDeepError,
   escapeHtml,
-  mountTabLoader,
 } from "/js/render.js";
 import { mountInlineChat } from "/js/chat.js";
 
@@ -62,19 +61,13 @@ async function init() {
   setupDownloadActions();
   document.addEventListener("overlay:exit", () => activateTab("report"));
 
-  // Friendly rex-themed loader while /api/r/<code> resolves. Pre-loaded
-  // WebPs in <head> mean this animates instantly — no "loader is loading."
-  const initialTarget = $("r-report-content");
-  const stopInitialLoader = mountTabLoader(initialTarget, {
-    headline: "Pulling up your report",
-    messages: [
-      "Looking up your contract review…",
-      "Loading every flag and finding…",
-      "Almost there…",
-    ],
-    intervalMs: 1800,
-    pose: "/assets/rex.webp",
-  });
+  // Show the rex-themed generating-loader while /api/r/<code> resolves —
+  // same loader the rest of the page uses, so we don't double up. Assume
+  // single-tier upfront; renderReportTab() will swap to the panel trio if
+  // the data turns out to be a panel deal. Pre-loaded WebPs in <head> mean
+  // this animates instantly — no "loader is loading."
+  insertLoaderInto("r-report-content");
+  showGeneratingLoader("single");
 
   let data;
   try {
@@ -89,12 +82,9 @@ async function init() {
     }
     data = await res.json();
   } catch (err) {
-    stopInitialLoader();
-    insertLoaderInto("r-report-content");
     showLoaderError("single", err.message || "Failed to load report.");
     return;
   }
-  stopInitialLoader();
 
   state.data = data;
   state.jobId = data.job_id;
